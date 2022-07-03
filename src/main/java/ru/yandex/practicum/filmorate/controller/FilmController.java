@@ -4,24 +4,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-
 import javax.validation.Valid;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-
+import java.util.*;
 
 @Slf4j
 @RestController
-@RequestMapping(value = "/films")
+@RequestMapping("/films")
 public class FilmController {
-    private Integer id;
-    private final HashMap<Integer, Film> films;
-
-    public FilmController() {
-        id = 0;
-        films = new HashMap<>();
-    }
+    private Integer id = 0;
+    private final HashMap<Integer, Film> films = new HashMap<>();
 
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
@@ -49,7 +41,7 @@ public class FilmController {
     }
 
     @GetMapping
-    public ArrayList<Film> readAll() {
+    public List<Film> readAll() {
         return new ArrayList<>(films.values());
     }
 
@@ -61,7 +53,7 @@ public class FilmController {
             throw new ValidationException(message);
         }
         if (film.getDescription().length() > 200) {
-            message = String.format("Описание фильма %s более 200 символов", film);
+            message = String.format("Описание фильма %s более 200 символов", film.getName());
             log.info(message);
             throw new ValidationException(message);
         }
@@ -80,5 +72,4 @@ public class FilmController {
     private Integer generateId() {
         return ++id;
     }
-
 }

@@ -1,41 +1,38 @@
 package ru.yandex.practicum.filmorate.controller;
 
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
-
 import javax.validation.Valid;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping(value = "/users")
+@RequestMapping("/users")
 public class UserController {
-
-    private final HashMap<Integer, User> users;
-    private Integer id;
-
-    public UserController() {
-        id = 0;
-        users = new HashMap<>();
-    }
+    private final HashMap<Integer, User> users = new HashMap<>();
+    private Integer id = 0;
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
+        log.info("Пришел запрос на добавление пользователя {}", user);
         validate(user);
         user.setId(generateId());
         users.put(id, user);
+        log.info("Пользователь {} добавлен", user);
         return user;
     }
 
     @PutMapping
     public User update(@Valid @RequestBody User user) {
+        log.info("Пришел запрос на обновление пользователя {}", user);
         if (users.containsKey(user.getId())) {
             users.put(user.getId(), user);
+            log.info("Пользователь {} обновлен", user);
             return users.get(user.getId());
         } else {
             RuntimeException e = new ValidationException(
@@ -46,7 +43,7 @@ public class UserController {
     }
 
     @GetMapping
-    public ArrayList<User> readAll() {
+    public List<User> readAll() {
         return new ArrayList<>(users.values());
     }
 
@@ -78,23 +75,3 @@ public class UserController {
         return ++id;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
