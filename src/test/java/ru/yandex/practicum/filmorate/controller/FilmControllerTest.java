@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class FilmControllerTest {
 
-    FilmController controller = new FilmController();
+    FilmController controller;
 
     @Test
     void createValidFilms() {
