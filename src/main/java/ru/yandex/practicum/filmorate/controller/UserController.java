@@ -1,50 +1,77 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+
 import javax.validation.Valid;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    private final HashMap<Integer, User> users = new HashMap<>();
-    private Integer id = 0;
 
-    @PostMapping
-    public User create(@Valid @RequestBody User user) {
-        log.info("Пришел запрос на добавление пользователя {}", user);
-        validate(user);
-        user.setId(generateId());
-        users.put(id, user);
-        log.info("Пользователь {} добавлен", user);
+    @Autowired
+    UserService userService;
+
+    @GetMapping("/{userId}")
+    public User getUser(@PathVariable int userId) {
+        User user = userService.getUserById(userId);
+        log.info("Get user by id = {}", user.getId());
         return user;
     }
 
+    @PostMapping
+    public User create(@RequestBody @Valid User user) {
+        validate(user);
+        User createdUser = userService.create(user);
+        log.info("User {} created and added in storage", createdUser);
+        return createdUser;
+    }
+
     @PutMapping
-    public User update(@Valid @RequestBody User user) {
-        log.info("Пришел запрос на обновление пользователя {}", user);
-        if (users.containsKey(user.getId())) {
-            users.put(user.getId(), user);
-            log.info("Пользователь {} обновлен", user);
-            return users.get(user.getId());
-        } else {
-            RuntimeException e = new ValidationException(
-                    String.format("Пользователь с идентификатором %d не найден", user.getId()));
-            log.info(e.getMessage());
-            throw e;
-        }
+    public User update(@RequestBody @Valid User user) {
+        User updatedUser = userService.update(user);
+        log.info("User {} updated and saved in storage", updatedUser);
+        return updatedUser;
     }
 
     @GetMapping
     public List<User> readAll() {
-        return new ArrayList<>(users.values());
+        List<User> userList = userService.getAllUsers();
+        log.info("Get all user, count = {}", userList.size());
+        return userList;
+    }
+
+    @PutMapping("/{userId}/friends/{friendId}")
+    public void addFriend(@PathVariable int userId, @PathVariable int friendId) {
+        userService.addFriend(userId, friendId);
+    }
+
+    @DeleteMapping("/{userId}/friends/{friendId}")
+    public void deleteFriend(@PathVariable int userId, @PathVariable int friendId) {
+        log.info("Delete friend id = {} user by id = {}", friendId, userId);
+        userService.deleteFriend(userId, friendId);
+    }
+
+    @GetMapping("/{userId}/friends")
+    public List<User> getFriendByUserId(@PathVariable int userId) {
+        log.info("Get users friends by id = {}", userId);
+        return userService.getFriendsByUserId(userId);
+    }
+
+    @GetMapping("/{userId}/friends/common/{otherUserId}")
+    public List<User> getCommonFriends(@PathVariable int userId, @PathVariable int otherUserId) {
+        List<User> listCommonFriends = userService.getCommonFriends(userId, otherUserId);
+        log.info("Get list common friends user id = {} and user id = {}, list ids = {}",
+                userId, otherUserId, listCommonFriends.stream().map(User::getId).collect(Collectors.toList()));
+        return listCommonFriends;
     }
 
     private void validate(User user) {
@@ -69,9 +96,5 @@ public class UserController {
             user.setName(user.getLogin());
             log.info("Пользователю {} в качестве имени для отображения присвоен его логин {}", user, user.getLogin());
         }
-    }
-
-    private Integer generateId() {
-        return ++id;
     }
 }
