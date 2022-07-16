@@ -14,15 +14,15 @@ import java.time.LocalDate;
 @ToString
 public class User {
     private Integer id;
-    @NotNull
+    //@NotNull
     private String name;
-    @NotNull
-    @NotBlank
+    //@NotNull
+    //@NotBlank
     private String login;
-    @NotNull
-    @NotBlank
-    @Email
+    //@NotNull
+    //@NotBlank
+   // @Email
     private String email;
-    @NotNull
+   // @NotNull
     private LocalDate birthday;
 }
