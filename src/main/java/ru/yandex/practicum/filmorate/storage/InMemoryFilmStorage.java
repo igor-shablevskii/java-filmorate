@@ -4,17 +4,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @Component
 public class InMemoryFilmStorage implements FilmStorage {
 
-    private final HashMap<Integer, Film> films = new HashMap<>();
-    private final HashMap<Integer, HashSet<Integer>> likes = new HashMap<>();
+    private final Map<Integer, Film> films = new HashMap<>();
+    private final Map<Integer, HashSet<Integer>> likes = new HashMap<>();
     private Integer id = 0;
 
     @Override
@@ -68,7 +65,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public HashMap<Integer, HashSet<Integer>> getAllLikes() {
+    public Map<Integer, HashSet<Integer>> getAllLikes() {
         return likes;
     }
 }

@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -16,11 +15,14 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestController
 @RequestMapping("/films")
-@AllArgsConstructor
 public class FilmController {
 
+    private final FilmService filmService;
+
     @Autowired
-    FilmService filmService;
+    public FilmController(FilmService filmService) {
+        this.filmService = filmService;
+    }
 
     @PostMapping
     public Film create(@RequestBody @Valid Film film) {
@@ -31,7 +33,7 @@ public class FilmController {
     }
 
     @PutMapping
-    public Film update(@Valid @RequestBody Film film) {
+    public Film update(@RequestBody @Valid Film film) {
         Film updatedFilm = filmService.update(film);
         log.info("Film {} updated and saved in storage", updatedFilm);
         return updatedFilm;

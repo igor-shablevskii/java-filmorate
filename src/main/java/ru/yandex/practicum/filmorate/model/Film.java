@@ -13,14 +13,14 @@ import java.time.LocalDate;
 @ToString
 public class Film {
     private Integer id;
-    //@NotNull
-   // @NotBlank
+    @NotNull
+    @NotBlank
     private String name;
-    //@NotNull
-    //@NotBlank
+    @NotNull
+    @NotBlank
     private String description;
-    //@NotNull
+    @NotNull
     private LocalDate releaseDate;
-    //@NotNull
+    @NotNull
     private Integer duration;
 }

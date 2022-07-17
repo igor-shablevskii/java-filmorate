@@ -49,7 +49,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public HashSet<Integer> getFriendsByUserId(int userId) {
+    public Set<Integer> getFriendsByUserId(int userId) {
         return friends.get(userId);
     }
 

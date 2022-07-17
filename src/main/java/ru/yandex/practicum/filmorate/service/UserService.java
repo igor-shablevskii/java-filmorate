@@ -1,22 +1,23 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor
 public class UserService {
 
+    private final UserStorage userStorage;
+
     @Autowired
-    UserStorage userStorage;
+    public UserService(UserStorage userStorage) {
+        this.userStorage = userStorage;
+    }
 
     public User getUserById(int userId) {
         final User user = userStorage.getUserById(userId);
@@ -65,23 +66,15 @@ public class UserService {
         if (!userStorage.containsInStorage(userId)) {
             throw new NotFoundException("User with id = " + userId + " not found");
         }
-        Set<Integer> friendsId = userStorage.getFriendsByUserId(userId);
-        List<User> listFriends = new ArrayList<>();
-        for (Integer id : friendsId) {
-            listFriends.add(userStorage.getUserById(id));
-        }
-        return listFriends;
+        return userStorage.getFriendsByUserId(userId)
+                .stream()
+                .map(this::getUserById)
+                .collect(Collectors.toList());
     }
 
     public List<User> getCommonFriends(int userId, int otherUserId) {
-        List<User> listCommonFriends = new ArrayList<>();
         List<User> friends = getFriendsByUserId(userId);
         List<User> otherFriends = getFriendsByUserId(otherUserId);
-        for (User user : friends) {
-            if (otherFriends.contains(user)) {
-                listCommonFriends.add(user);
-            }
-        }
-        return listCommonFriends;
+        return friends.stream().filter(otherFriends::contains).collect(Collectors.toList());
     }
 }

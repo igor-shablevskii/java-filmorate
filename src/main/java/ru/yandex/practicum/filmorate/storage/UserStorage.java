@@ -2,8 +2,8 @@ package ru.yandex.practicum.filmorate.storage;
 
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public interface UserStorage {
 
@@ -23,5 +23,5 @@ public interface UserStorage {
 
     void deleteFriend(int userId, int friendId);
 
-    HashSet<Integer> getFriendsByUserId(int userId);
+    Set<Integer> getFriendsByUserId(int userId);
 }
