@@ -1,14 +1,21 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
+
 import java.time.LocalDate;
 import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
+
 class UserControllerTest {
-    UserController controller = new UserController();
+
+    UserController controller = new UserController(new UserService(new InMemoryUserStorage()));
 
     @Test
     void createValidUsers() {
@@ -110,8 +117,8 @@ class UserControllerTest {
         User wrongIdUserSaul = new User(478, "Saul", "lawyer", "saul.goodman@gmail.ru",
                 LocalDate.of(1962, 10, 22));
 
-        assertThrows(ValidationException.class, () -> controller.update(wrongIdUserGarry));
-        assertThrows(ValidationException.class, () -> controller.update(wrongIdUserSaul));
+        assertThrows(NotFoundException.class, () -> controller.update(wrongIdUserGarry));
+        assertThrows(NotFoundException.class, () -> controller.update(wrongIdUserSaul));
     }
 
     @Test
