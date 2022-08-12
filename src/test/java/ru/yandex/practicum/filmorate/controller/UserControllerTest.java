@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.controller;
+/*package ru.yandex.practicum.filmorate.controller;
 
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -137,4 +137,4 @@ class UserControllerTest {
         assertTrue(list.contains(userGarry));
         assertTrue(list.contains(userSaul));
     }
-}
+}*/

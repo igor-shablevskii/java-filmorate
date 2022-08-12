@@ -56,7 +56,7 @@ public class FilmController {
     @PutMapping("/{filmId}/like/{userId}")
     public void addLike(@PathVariable int filmId, @PathVariable int userId) {
         log.info("Added like film id = {} user id = {}", filmId, userId);
-        filmService.addLike(filmId, userId);
+        filmService.saveLike(filmId, userId);
     }
 
     @DeleteMapping("{filmId}/like/{userId}")
@@ -91,6 +91,11 @@ public class FilmController {
         }
         if (film.getDuration() <= 0) {
             message = String.format("У фильма %s некорректная продолжительность", film);
+            log.info(message);
+            throw new ValidationException(message);
+        }
+        if (film.getMpa() == null) {
+            message = String.format("У фильма %s отсутствует рейтинг MPA", film);
             log.info(message);
             throw new ValidationException(message);
         }

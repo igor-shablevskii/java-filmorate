@@ -34,9 +34,9 @@ public class UserController {
     @PostMapping
     public User create(@RequestBody @Valid User user) {
         validate(user);
-        User createdUser = userService.create(user);
-        log.info("User {} created and added in storage", createdUser);
-        return createdUser;
+        User savedUser = userService.save(user);
+        log.info("User {} created and added in storage", savedUser);
+        return savedUser;
     }
 
     @PutMapping

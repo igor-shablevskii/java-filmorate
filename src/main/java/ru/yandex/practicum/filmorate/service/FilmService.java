@@ -2,79 +2,87 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dao.FilmDao;
+import ru.yandex.practicum.filmorate.dao.GenreDao;
+import ru.yandex.practicum.filmorate.dao.LikeDao;
+import ru.yandex.practicum.filmorate.dao.UserDao;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
 public class FilmService {
 
-    private final FilmStorage filmStorage;
-    private final UserStorage userStorage;
+    private final FilmDao filmDbStorage;
+    private final UserDao userDbStorage;
+    private final GenreDao genreDbStorage;
+    private final LikeDao likeDbStorage;
 
     @Autowired
-    public FilmService(FilmStorage filmStorage, UserStorage userStorage) {
-        this.filmStorage = filmStorage;
-        this.userStorage = userStorage;
+    public FilmService(FilmDao filmDbStorage, UserDao userDbStorage, GenreDao genreDbStorage, LikeDao likeDbStorage) {
+        this.filmDbStorage = filmDbStorage;
+        this.userDbStorage = userDbStorage;
+        this.genreDbStorage = genreDbStorage;
+        this.likeDbStorage = likeDbStorage;
     }
 
     public Film create(Film film) {
-        return filmStorage.save(film);
+        Film savedFilm = filmDbStorage.save(film);
+        genreDbStorage.setGenre(savedFilm);
+        return savedFilm;
     }
 
     public Film update(Film film) {
-        if (filmStorage.getFilmById(film.getId()) == null) {
+        if (!filmDbStorage.containsInStorage(film.getId())) {
             throw new NotFoundException("Film with id = " + film.getId() + " not found");
         }
-        return filmStorage.update(film);
+        Film updatedFilm = filmDbStorage.update(film);
+        genreDbStorage.setGenre(updatedFilm);
+        return updatedFilm;
     }
 
     public Film getFilmById(int filmId) {
-        final Film film = filmStorage.getFilmById(filmId);
-        if (film == null) {
+        if (!filmDbStorage.containsInStorage(filmId)) {
             throw new NotFoundException("Film with id = " + filmId + " not found");
         }
+        Film film = filmDbStorage.getFilmById(filmId);
+        film.getGenres().addAll(genreDbStorage.loadGenres(filmId));
         return film;
     }
 
     public List<Film> getAllFilms() {
-        return filmStorage.getAllFilms();
+        return filmDbStorage.getAllFilms()
+                .stream()
+                .peek(f -> f.getGenres().addAll(genreDbStorage.loadGenres(f.getId())))
+                .collect(Collectors.toList());
     }
 
-    public void addLike(int filmId, int userId) {
-        if (!filmStorage.containsInStorage(filmId)) {
+    public void saveLike(int filmId, int userId) {
+        if (!filmDbStorage.containsInStorage(filmId)) {
             throw new NotFoundException("Film with id = " + filmId + " not found");
         }
-        if (!userStorage.containsInStorage(userId)) {
+        if (!userDbStorage.containsInStorage(userId)) {
             throw new NotFoundException("User with id = " + userId + " not found");
         }
-        filmStorage.addLike(filmId, userId);
+        likeDbStorage.saveLike(filmId, userId);
     }
 
     public void deleteLike(int filmId, int userId) {
-        if (!filmStorage.containsInStorage(filmId)) {
+        if (!filmDbStorage.containsInStorage(filmId)) {
             throw new NotFoundException("Film with id = " + filmId + " not found");
         }
-        if (!userStorage.containsInStorage(userId)) {
+        if (!userDbStorage.containsInStorage(userId)) {
             throw new NotFoundException("User with id = " + userId + " not found");
         }
-        filmStorage.deleteLike(filmId, userId);
+        likeDbStorage.deleteLike(filmId, userId);
     }
 
     public List<Film> getPopularFilms(int count) {
-        return filmStorage.getAllLikes()
-                .entrySet()
+        return filmDbStorage.getPopularFilms(count)
                 .stream()
-                .sorted(Comparator.comparing(o -> -o.getValue().size()))
-                .limit(count)
-                .map(Map.Entry::getKey)
-                .map(this::getFilmById)
+                .peek(f -> f.getGenres().addAll(genreDbStorage.loadGenres(f.getId())))
                 .collect(Collectors.toList());
     }
 }
