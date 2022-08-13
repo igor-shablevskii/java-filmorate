@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dao.FriendDao;
 import ru.yandex.practicum.filmorate.dao.UserDao;
@@ -14,7 +15,7 @@ public class UserService {
 
     private final UserDao userDbStorage;
     private final FriendDao friendDbStorage;
-
+    @Autowired
     public UserService(UserDao userDbStorage, FriendDao friendDbStorage) {
         this.userDbStorage = userDbStorage;
         this.friendDbStorage = friendDbStorage;
