@@ -2,9 +2,10 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dao.FriendDao;
+import ru.yandex.practicum.filmorate.dao.UserDao;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -12,61 +13,61 @@ import java.util.stream.Collectors;
 @Service
 public class UserService {
 
-    private final UserStorage userStorage;
-
+    private final UserDao userDbStorage;
+    private final FriendDao friendDbStorage;
     @Autowired
-    public UserService(UserStorage userStorage) {
-        this.userStorage = userStorage;
+    public UserService(UserDao userDbStorage, FriendDao friendDbStorage) {
+        this.userDbStorage = userDbStorage;
+        this.friendDbStorage = friendDbStorage;
     }
 
-    public User getUserById(int userId) {
-        final User user = userStorage.getUserById(userId);
-        if (user == null) {
-            throw new NotFoundException("User with id = " + userId + " not found");
-        }
-        return user;
-    }
-
-    public User create(User user) {
-        return userStorage.save(user);
+    public User save(User user) {
+        return userDbStorage.save(user);
     }
 
     public User update(User user) {
-        if (userStorage.getUserById(user.getId()) == null) {
+        if (!userDbStorage.containsInStorage(user.getId())) {
             throw new NotFoundException("User with id = " + user.getId() + " not found");
         }
-        return userStorage.update(user);
+        return userDbStorage.update(user);
+    }
+
+    public User getUserById(int userId) {
+        if (!userDbStorage.containsInStorage(userId)) {
+            throw new NotFoundException("User with id = " + userId + " not found");
+        }
+        return userDbStorage.getUserById(userId);
     }
 
     public List<User> getAllUsers() {
-        return userStorage.getAllUsers();
+        return userDbStorage.getAllUsers();
     }
 
     public void addFriend(int userId, int friendId) {
-        if (!userStorage.containsInStorage(userId)) {
+        if (!userDbStorage.containsInStorage(userId)) {
             throw new NotFoundException("User with id = " + userId + " not found");
         }
-        if (!userStorage.containsInStorage(friendId)) {
+        if (!userDbStorage.containsInStorage(friendId)) {
             throw new NotFoundException("User with id = " + friendId + " not found");
         }
-        userStorage.addFriend(userId, friendId);
+        friendDbStorage.saveFriend(userId, friendId);
     }
 
     public void deleteFriend(int userId, int friendId) {
-        if (!userStorage.containsInStorage(userId)) {
+        if (!userDbStorage.containsInStorage(userId)) {
             throw new NotFoundException("User with id = " + userId + " not found");
         }
-        if (!userStorage.containsInStorage(friendId)) {
+        if (!userDbStorage.containsInStorage(friendId)) {
             throw new NotFoundException("User with id = " + friendId + " not found");
         }
-        userStorage.deleteFriend(userId, friendId);
+        friendDbStorage.deleteFriend(userId, friendId);
     }
 
     public List<User> getFriendsByUserId(int userId) {
-        if (!userStorage.containsInStorage(userId)) {
+        if (!userDbStorage.containsInStorage(userId)) {
             throw new NotFoundException("User with id = " + userId + " not found");
         }
-        return userStorage.getFriendsByUserId(userId)
+        return friendDbStorage.getFriendsByUserId(userId)
                 .stream()
                 .map(this::getUserById)
                 .collect(Collectors.toList());
@@ -75,6 +76,8 @@ public class UserService {
     public List<User> getCommonFriends(int userId, int otherUserId) {
         List<User> friends = getFriendsByUserId(userId);
         List<User> otherFriends = getFriendsByUserId(otherUserId);
-        return friends.stream().filter(otherFriends::contains).collect(Collectors.toList());
+        return friends.stream()
+                .filter(otherFriends::contains)
+                .collect(Collectors.toList());
     }
 }
