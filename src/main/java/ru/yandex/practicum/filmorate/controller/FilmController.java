@@ -72,6 +72,11 @@ public class FilmController {
         return popularFilms;
     }
 
+    @GetMapping(value = "/director/{directorId}")
+    public List<Film> getSortedFilmsByDirector(@PathVariable int directorId, @RequestParam("sortBy") String sortBy) {
+        return filmService.getSortedFilmsByDirectors(directorId, sortBy);
+    }
+
     private void validate(Film film) {
         String message;
         if (film.getName().isEmpty()) {
