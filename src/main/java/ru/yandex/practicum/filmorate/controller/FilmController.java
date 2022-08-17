@@ -9,7 +9,6 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -74,9 +73,16 @@ public class FilmController {
     }
 
     @GetMapping("/common")
-    private Collection<Film> getUsersCommonFilms(@RequestParam(name = "userId") int userId,
+    private List<Film> getUsersCommonFilms(@RequestParam(name = "userId") int userId,
                                                            @RequestParam(name = "friendId") int otherUserId) {
+        log.info("Get common films by two users id = {}", filmService.getUsersCommonFilms(userId, otherUserId));
         return filmService.getUsersCommonFilms(userId, otherUserId);
+    }
+
+    @DeleteMapping("/{filmId}")
+    private void deleteFilmById(@PathVariable int filmId) {
+        log.info("Delete film by id = {}", filmId);
+        filmService.deleteFilmById(filmId);
     }
 
     private void validate(Film film) {

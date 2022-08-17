@@ -40,4 +40,7 @@ public interface FilmDao {
 
     // Метод возвращает из БД список общих фильмов по id двух пользователей с сортировкой по популярности
     List<Film> getUsersCommonFilms(int userId, int otherUserId);
+
+    // Метод удаляет фильм по id
+    public void deleteFilmById(int filmId);
 }
