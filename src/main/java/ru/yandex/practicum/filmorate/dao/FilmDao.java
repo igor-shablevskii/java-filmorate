@@ -37,4 +37,7 @@ public interface FilmDao {
      * Проверка наличия фильма в БД
      */
     boolean containsInStorage(int filmId);
+
+    // Метод возвращает из БД список общих фильмов по id двух пользователей с сортировкой по популярности
+    List<Film> getUsersCommonFilms(int userId, int otherUserId);
 }

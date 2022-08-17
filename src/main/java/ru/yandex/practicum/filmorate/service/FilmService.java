@@ -85,4 +85,8 @@ public class FilmService {
                 .peek(f -> f.getGenres().addAll(genreDbStorage.loadGenres(f.getId())))
                 .collect(Collectors.toList());
     }
+
+    public List<Film> getUsersCommonFilms(int userId, int otherUserId) {
+        return filmDbStorage.getUsersCommonFilms(userId, otherUserId);
+    }
 }
