@@ -2,10 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.dao.FilmDao;
-import ru.yandex.practicum.filmorate.dao.GenreDao;
-import ru.yandex.practicum.filmorate.dao.LikeDao;
-import ru.yandex.practicum.filmorate.dao.UserDao;
+import ru.yandex.practicum.filmorate.dao.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 
@@ -19,18 +16,25 @@ public class FilmService {
     private final UserDao userDbStorage;
     private final GenreDao genreDbStorage;
     private final LikeDao likeDbStorage;
+    private final DirectorDao directorDbStorage;
 
     @Autowired
-    public FilmService(FilmDao filmDbStorage, UserDao userDbStorage, GenreDao genreDbStorage, LikeDao likeDbStorage) {
+    public FilmService(FilmDao filmDbStorage,
+                       UserDao userDbStorage,
+                       GenreDao genreDbStorage,
+                       LikeDao likeDbStorage,
+                       DirectorDao directorDbStorage) {
         this.filmDbStorage = filmDbStorage;
         this.userDbStorage = userDbStorage;
         this.genreDbStorage = genreDbStorage;
         this.likeDbStorage = likeDbStorage;
+        this.directorDbStorage = directorDbStorage;
     }
 
     public Film create(Film film) {
         Film savedFilm = filmDbStorage.save(film);
         genreDbStorage.setGenre(savedFilm);
+        directorDbStorage.setDirector(savedFilm);
         return savedFilm;
     }
 
@@ -40,6 +44,7 @@ public class FilmService {
         }
         Film updatedFilm = filmDbStorage.update(film);
         genreDbStorage.setGenre(updatedFilm);
+        directorDbStorage.setDirector(updatedFilm);
         return updatedFilm;
     }
 
@@ -49,6 +54,7 @@ public class FilmService {
         }
         Film film = filmDbStorage.getFilmById(filmId);
         film.getGenres().addAll(genreDbStorage.loadGenres(filmId));
+        film.getDirectors().addAll(directorDbStorage.loadDirectors(filmId));
         return film;
     }
 
@@ -56,6 +62,7 @@ public class FilmService {
         return filmDbStorage.getAllFilms()
                 .stream()
                 .peek(f -> f.getGenres().addAll(genreDbStorage.loadGenres(f.getId())))
+                .peek(f -> f.getDirectors().addAll(directorDbStorage.loadDirectors(f.getId())))
                 .collect(Collectors.toList());
     }
 
@@ -83,6 +90,21 @@ public class FilmService {
         return filmDbStorage.getPopularFilms(count)
                 .stream()
                 .peek(f -> f.getGenres().addAll(genreDbStorage.loadGenres(f.getId())))
+                .peek(f -> f.getDirectors().addAll(directorDbStorage.loadDirectors(f.getId())))
+                .collect(Collectors.toList());
+    }
+
+    public List<Film> getSortedFilmsByDirectors(int directorId, String sortBy) {
+        if (!directorDbStorage.containsInStorage(directorId)) {
+            throw new NotFoundException("Director with id = " + directorId + " not found");
+        }
+        if (!sortBy.equals("year") && !sortBy.equals("likes")) {
+            throw new RuntimeException("Sorting type not found");
+        }
+        return filmDbStorage.getSortedFilmsByDirectors(directorId, sortBy)
+                .stream()
+                .peek(f -> f.getGenres().addAll(genreDbStorage.loadGenres(f.getId())))
+                .peek(f -> f.getDirectors().addAll(directorDbStorage.loadDirectors(f.getId())))
                 .collect(Collectors.toList());
     }
 }

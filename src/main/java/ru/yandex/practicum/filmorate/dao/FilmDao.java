@@ -37,4 +37,10 @@ public interface FilmDao {
      * Проверка наличия фильма в БД
      */
     boolean containsInStorage(int filmId);
+
+    /**
+     * Получить список фильмов режиссёра
+     * отсортированных по типу sortBy
+     */
+    List<Film> getSortedFilmsByDirectors(int directorId, String sortBy);
 }
