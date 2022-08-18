@@ -15,6 +15,7 @@ public class UserService {
 
     private final UserDao userDbStorage;
     private final FriendDao friendDbStorage;
+
     @Autowired
     public UserService(UserDao userDbStorage, FriendDao friendDbStorage) {
         this.userDbStorage = userDbStorage;
