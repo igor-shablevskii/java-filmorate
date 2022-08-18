@@ -6,6 +6,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dao.FilmDao;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
@@ -19,10 +20,12 @@ import java.util.*;
 public class FilmDbStorage implements FilmDao {
 
     private final JdbcTemplate jdbcTemplate;
+    private final UserDbStorage userDbStorage;
 
     @Autowired
-    public FilmDbStorage(JdbcTemplate jdbcTemplate) {
+    public FilmDbStorage(JdbcTemplate jdbcTemplate, UserDbStorage userDbStorage) {
         this.jdbcTemplate = jdbcTemplate;
+        this.userDbStorage = userDbStorage;
     }
 
     @Override
@@ -135,5 +138,36 @@ public class FilmDbStorage implements FilmDao {
                 .genres(new LinkedHashSet<>())
                 .directors(new HashSet<>())
                 .build();
+    }
+
+    @Override
+    public List<Film> getUsersCommonFilms(int userId, int otherUserId) {
+        String excIdMsg = "";
+        String sql;
+
+        // проверка наличия пользователей по id в БД
+        if (!userDbStorage.containsInStorage(userId)) {
+            excIdMsg = " id " + userId;
+        }
+        if (!userDbStorage.containsInStorage(otherUserId)) {
+            excIdMsg += " and " + otherUserId;
+        }
+
+        // если хотя бы один пользователь не найден выбросить исключение
+        if (excIdMsg.length() > 0) {
+            throw new NotFoundException("User with" + excIdMsg + " not found");
+        }
+
+        sql = String.format("WITH common_users_films AS (SELECT likes.film_id FROM film_likes AS likes " +
+                "WHERE likes.user_id = %s INTERSECT SELECT likes.film_id FROM film_likes AS likes " +
+                "WHERE likes.user_id = %s), top_films AS (SELECT films.* FROM films " +
+                "LEFT JOIN film_likes AS likes ON likes.film_id = films.film_id " +
+                "GROUP BY films.film_id ORDER BY COUNT(likes.film_id) DESC ) " +
+                "SELECT top_films.*, mpa.mpa_name FROM top_films " +
+                "LEFT JOIN mpa_ratings mpa ON top_films.mpa_id = mpa.mpa_id " +
+                "LEFT JOIN common_users_films ON common_users_films.film_id = top_films.film_id " +
+                "WHERE top_films.film_id IN (common_users_films.film_id)", userId, otherUserId);
+
+        return jdbcTemplate.query(sql, this::mapRowToFilm);
     }
 }

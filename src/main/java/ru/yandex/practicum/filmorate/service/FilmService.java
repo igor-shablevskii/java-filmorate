@@ -107,4 +107,8 @@ public class FilmService {
                 .peek(f -> f.getDirectors().addAll(directorDbStorage.loadDirectors(f.getId())))
                 .collect(Collectors.toList());
     }
+
+    public List<Film> getUsersCommonFilms(int userId, int otherUserId) {
+        return filmDbStorage.getUsersCommonFilms(userId, otherUserId);
+    }
 }

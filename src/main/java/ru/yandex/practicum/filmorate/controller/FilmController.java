@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -72,9 +73,17 @@ public class FilmController {
         return popularFilms;
     }
 
+
+    @GetMapping("/common")
+    private Collection<Film> getUsersCommonFilms(@RequestParam(name = "userId") int userId,
+                                                           @RequestParam(name = "friendId") int otherUserId) {
+        return filmService.getUsersCommonFilms(userId, otherUserId);
+    }
+
     @GetMapping(value = "/director/{directorId}")
     public List<Film> getSortedFilmsByDirector(@PathVariable int directorId, @RequestParam("sortBy") String sortBy) {
         return filmService.getSortedFilmsByDirectors(directorId, sortBy);
+
     }
 
     private void validate(Film film) {
