@@ -72,6 +72,7 @@ public class FilmController {
         return popularFilms;
     }
 
+
     @GetMapping("/common")
     private List<Film> getUsersCommonFilms(@RequestParam(name = "userId") int userId,
                                                            @RequestParam(name = "friendId") int otherUserId) {
@@ -79,11 +80,17 @@ public class FilmController {
         return filmService.getUsersCommonFilms(userId, otherUserId);
     }
 
+
     @DeleteMapping("/{filmId}")
     private void deleteFilmById(@PathVariable int filmId) {
         log.info("Delete film by id = {}", filmId);
         filmService.deleteFilmById(filmId);
-    }
+   }
+
+    @GetMapping(value = "/director/{directorId}")
+    public List<Film> getSortedFilmsByDirector(@PathVariable int directorId, @RequestParam("sortBy") String sortBy) {
+        return filmService.getSortedFilmsByDirectors(directorId, sortBy);
+   }
 
     private void validate(Film film) {
         String message;
