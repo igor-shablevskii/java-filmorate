@@ -82,22 +82,24 @@ public class FilmDbStorage implements FilmDao {
     }
 
     @Override
-    public List<Film> getPopularFilms(int count) {
-        String sql = "SELECT " +
-                "f.film_id, " +
-                "f.film_name, " +
-                "f.film_description, " +
-                "f.film_releasedate, " +
-                "f.film_duration, " +
-                "f.mpa_id, " +
-                "mr.mpa_name " +
-                "FROM films f " +
-                "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
-                "LEFT JOIN film_likes fl ON f.film_id = fl.film_id " +
-                "GROUP BY f.film_id " +
-                "ORDER BY count(DISTINCT fl.user_id) DESC " +
-                "LIMIT ?;";
-        return jdbcTemplate.query(sql, this::mapRowToFilm, count);
+    public List<Film> getPopularFilms(int count, Integer... genreAndYear) {
+        String sql = "SELECT films.*, mpa.mpa_name FROM films LEFT JOIN film_genre AS genres ON films.film_id = genres.film_id LEFT JOIN mpa_ratings AS mpa ON films.mpa_id = mpa.mpa_id LEFT JOIN film_likes AS likes ON films.film_id = likes.film_id";
+
+        if (genreAndYear[0] != null) {
+            sql += " WHERE genres.genre_id = " + genreAndYear[0];
+        }
+
+        if (genreAndYear[1] != null) {
+            if (genreAndYear[0] != null) {
+                sql += " AND year(film_releaseDate) = " + genreAndYear[1];
+            } else {
+                sql += " WHERE year(film_releaseDate) = " + genreAndYear[1];
+            }
+        }
+
+        sql += " GROUP BY films.film_id ORDER BY count(DISTINCT likes.user_id) DESC LIMIT " + count;
+
+        return jdbcTemplate.query(sql, this::mapRowToFilm);
     }
 
     private Film mapRowToFilm(ResultSet rs, int rowNum) throws SQLException {
@@ -121,10 +123,10 @@ public class FilmDbStorage implements FilmDao {
 
         // проверка наличия пользователей по id в БД
         if (!userDbStorage.containsInStorage(userId)) {
-            excIdMsg = " first id " + userId;
+            excIdMsg = " first id " + userId + ". ";
         }
         if (!userDbStorage.containsInStorage(otherUserId)) {
-            excIdMsg += " second id " + otherUserId;
+            excIdMsg += " second id " + otherUserId + ". ";
         }
 
         // если хотя бы один пользователь не найден выбросить исключение

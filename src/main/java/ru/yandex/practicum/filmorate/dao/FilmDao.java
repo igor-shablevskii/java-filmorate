@@ -31,7 +31,7 @@ public interface FilmDao {
      * отсортированных по количеству лайков
      * пользователей по desc
      */
-    List<Film> getPopularFilms(int count);
+    List<Film> getPopularFilms(int count, Integer ... genreAndYear);
 
     /**
      * Проверка наличия фильма в БД

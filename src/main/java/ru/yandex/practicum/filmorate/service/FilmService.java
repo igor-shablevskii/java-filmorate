@@ -79,8 +79,8 @@ public class FilmService {
         likeDbStorage.deleteLike(filmId, userId);
     }
 
-    public List<Film> getPopularFilms(int count) {
-        return filmDbStorage.getPopularFilms(count)
+    public List<Film> getPopularFilms(int count,  Integer ... genreAndYear) {
+        return filmDbStorage.getPopularFilms(count, genreAndYear)
                 .stream()
                 .peek(f -> f.getGenres().addAll(genreDbStorage.loadGenres(f.getId())))
                 .collect(Collectors.toList());
