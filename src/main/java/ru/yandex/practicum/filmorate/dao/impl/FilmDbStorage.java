@@ -100,6 +100,30 @@ public class FilmDbStorage implements FilmDao {
         sql += " GROUP BY films.film_id ORDER BY count(DISTINCT likes.user_id) DESC LIMIT " + count;
 
         return jdbcTemplate.query(sql, this::mapRowToFilm);
+        }
+
+    public List<Film> getSortedFilmsByDirectors(int directorId, String sortBy) {
+        List<Film> listFilm;
+        if (sortBy.equals("year")) {
+            String sql = "SELECT f.film_id, f.film_name, f.film_description, f.film_releasedate, " +
+                    "f.film_duration, f.mpa_id, mr.mpa_name FROM films f " +
+                    "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
+                    "LEFT JOIN film_director fd ON f.film_id = fd.film_id " +
+                    "WHERE fd.director_id = ? " +
+                    "ORDER BY f.film_releasedate;";
+            listFilm = jdbcTemplate.query(sql, this::mapRowToFilm, directorId);
+        } else {
+            String sql = "SELECT f.film_id, f.film_name, f.film_description, f.film_releasedate, " +
+                    "f.film_duration, f.mpa_id, mr.mpa_name FROM films f " +
+                    "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
+                    "LEFT JOIN film_likes fl ON f.film_id = fl.film_id " +
+                    "LEFT JOIN film_director fd ON f.FILM_ID = fd.FILM_ID " +
+                    "WHERE fd.director_id = ? " +
+                    "GROUP BY fd.film_id " +
+                    "ORDER BY count(DISTINCT fl.user_id) DESC;";
+            listFilm = jdbcTemplate.query(sql, this::mapRowToFilm, directorId);
+        }
+        return listFilm;
     }
 
     private Film mapRowToFilm(ResultSet rs, int rowNum) throws SQLException {
@@ -113,6 +137,7 @@ public class FilmDbStorage implements FilmDao {
                         rs.getInt("mpa_id"),
                         rs.getString("mpa_name")))
                 .genres(new LinkedHashSet<>())
+                .directors(new HashSet<>())
                 .build();
     }
 
