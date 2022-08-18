@@ -80,4 +80,8 @@ public class UserService {
                 .filter(otherFriends::contains)
                 .collect(Collectors.toList());
     }
+
+    public void deleteUserById(int userId) {
+        userDbStorage.deleteUserById(userId);
+    }
 }

@@ -111,4 +111,8 @@ public class FilmService {
     public List<Film> getUsersCommonFilms(int userId, int otherUserId) {
         return filmDbStorage.getUsersCommonFilms(userId, otherUserId);
     }
+
+    public void deleteFilmById(int filmId) {
+        filmDbStorage.deleteFilmById(filmId);
+    }
 }

@@ -147,10 +147,10 @@ public class FilmDbStorage implements FilmDao {
 
         // проверка наличия пользователей по id в БД
         if (!userDbStorage.containsInStorage(userId)) {
-            excIdMsg = " id " + userId;
+            excIdMsg = " first id " + userId;
         }
         if (!userDbStorage.containsInStorage(otherUserId)) {
-            excIdMsg += " and " + otherUserId;
+            excIdMsg += " second id " + otherUserId;
         }
 
         // если хотя бы один пользователь не найден выбросить исключение
@@ -169,5 +169,16 @@ public class FilmDbStorage implements FilmDao {
                 "WHERE top_films.film_id IN (common_users_films.film_id)", userId, otherUserId);
 
         return jdbcTemplate.query(sql, this::mapRowToFilm);
+    }
+
+    @Override
+    public void deleteFilmById(int filmId) {
+        // проверка наличия фильма по id в БД, если не найден выбросить исключение
+        if (!containsInStorage(filmId)) {
+            throw new NotFoundException("Film with id " + filmId + " not found");
+        }
+
+        String sql = String.format("DELETE FROM films WHERE film_id = '%s'", filmId);
+        jdbcTemplate.update(sql);
     }
 }

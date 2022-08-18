@@ -6,6 +6,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dao.UserDao;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.sql.Date;
@@ -89,5 +90,16 @@ public class UserDbStorage implements UserDao {
                 .email(resultSet.getString("user_email"))
                 .birthday(resultSet.getDate("user_birthday").toLocalDate())
                 .build();
+    }
+
+    @Override
+    public void deleteUserById(int userId) {
+        // проверка наличия пользователя по id в БД, если не найден выбросить исключение
+        if (!containsInStorage(userId)) {
+            throw new NotFoundException("User with id " + userId + " not found");
+        }
+
+        String sql = String.format("DELETE FROM users WHERE user_id = '%s'", userId);
+        jdbcTemplate.update(sql);
     }
 }
