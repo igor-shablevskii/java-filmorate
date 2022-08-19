@@ -74,7 +74,6 @@ public class FilmController {
         return popularFilms;
     }
 
-
     @GetMapping("/common")
     private List<Film> getUsersCommonFilms(@RequestParam(name = "userId") int userId,
                                                            @RequestParam(name = "friendId") int otherUserId) {
