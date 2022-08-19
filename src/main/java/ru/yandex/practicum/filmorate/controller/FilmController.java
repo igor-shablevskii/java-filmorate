@@ -66,8 +66,10 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public List<Film> getPopularFilms(@RequestParam(defaultValue = "10") int count) {
-        List<Film> popularFilms = filmService.getPopularFilms(count);
+    public List<Film> getPopularFilms(@RequestParam(defaultValue = "10") Integer count,
+                                      @RequestParam(required = false) Integer genreId,
+                                      @RequestParam(required = false) Integer year) {
+        List<Film> popularFilms = filmService.getPopularFilms(count, genreId, year);
         log.info("Get popular films ids = {}", popularFilms.stream().map(Film::getId).collect(Collectors.toList()));
         return popularFilms;
     }
@@ -75,7 +77,7 @@ public class FilmController {
 
     @GetMapping("/common")
     private List<Film> getUsersCommonFilms(@RequestParam(name = "userId") int userId,
-                                                           @RequestParam(name = "friendId") int otherUserId) {
+                                           @RequestParam(name = "friendId") int otherUserId) {
         log.info("Get common films by two users id = {}", filmService.getUsersCommonFilms(userId, otherUserId));
         return filmService.getUsersCommonFilms(userId, otherUserId);
     }
@@ -85,12 +87,12 @@ public class FilmController {
     private void deleteFilmById(@PathVariable int filmId) {
         log.info("Delete film by id = {}", filmId);
         filmService.deleteFilmById(filmId);
-   }
+    }
 
     @GetMapping(value = "/director/{directorId}")
     public List<Film> getSortedFilmsByDirector(@PathVariable int directorId, @RequestParam("sortBy") String sortBy) {
         return filmService.getSortedFilmsByDirectors(directorId, sortBy);
-   }
+    }
 
     private void validate(Film film) {
         String message;

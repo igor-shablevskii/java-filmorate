@@ -14,7 +14,10 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
 
 @Repository
 public class FilmDbStorage implements FilmDao {
@@ -30,8 +33,8 @@ public class FilmDbStorage implements FilmDao {
 
     @Override
     public Film save(Film film) {
-        String sql = "INSERT INTO films (film_name, film_description, film_releasedate, film_duration, mpa_id)" +
-                "VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO films (film_name, film_description, film_releasedate, film_duration, rate, mpa_id)" +
+                "VALUES (?, ?, ?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement stmt = connection.prepareStatement(sql, new String[]{"film_id"});
@@ -39,7 +42,8 @@ public class FilmDbStorage implements FilmDao {
             stmt.setString(2, film.getDescription());
             stmt.setDate(3, Date.valueOf(film.getReleaseDate()));
             stmt.setInt(4, film.getDuration());
-            stmt.setInt(5, film.getMpa().getId());
+            stmt.setInt(5, film.getRate());
+            stmt.setInt(6, film.getMpa().getId());
             return stmt;
         }, keyHolder);
         int filmId = Objects.requireNonNull(keyHolder.getKey()).intValue();
@@ -50,12 +54,13 @@ public class FilmDbStorage implements FilmDao {
     @Override
     public Film update(Film film) {
         String sql = "UPDATE films SET film_name = ?, film_description = ?, film_releasedate = ?," +
-                "film_duration = ?, mpa_id = ? WHERE film_id = ?";
+                "film_duration = ?, rate = ?, mpa_id = ? WHERE film_id = ?";
         jdbcTemplate.update(sql,
                 film.getName(),
                 film.getDescription(),
                 film.getReleaseDate(),
                 film.getDuration(),
+                film.getRate(),
                 film.getMpa().getId(),
                 film.getId());
         return film;
@@ -107,22 +112,58 @@ public class FilmDbStorage implements FilmDao {
     }
 
     @Override
-    public List<Film> getPopularFilms(int count) {
+    public List<Film> getPopularFilms(Integer count) {
         String sql = "SELECT " +
-                "f.film_id, " +
-                "f.film_name, " +
-                "f.film_description, " +
-                "f.film_releasedate, " +
-                "f.film_duration, " +
-                "f.mpa_id, " +
+                "*, " +
                 "mr.mpa_name " +
                 "FROM films f " +
                 "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
-                "LEFT JOIN film_likes fl ON f.film_id = fl.film_id " +
-                "GROUP BY f.film_id " +
-                "ORDER BY count(DISTINCT fl.user_id) DESC " +
+                "ORDER BY rate DESC " +
                 "LIMIT ?";
         return jdbcTemplate.query(sql, this::mapRowToFilm, count);
+    }
+
+    @Override
+    public List<Film> getPopularFilmsByGenreAndYear(Integer count, Integer genreId, Integer year) {
+        String sql = "SELECT " +
+                "*, " +
+                "mr.mpa_name, " +
+                "fr.genre_id " +
+                "FROM films f " +
+                "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
+                "LEFT JOIN film_genre fr ON f.film_id = fr.film_id " +
+                "WHERE genre_id = ? AND YEAR(film_releaseDate) = ? " +
+                "ORDER BY rate DESC " +
+                "LIMIT ?";
+        return jdbcTemplate.query(sql, this::mapRowToFilm, genreId, year, count);
+    }
+
+    @Override
+    public List<Film> getPopularFilmsByGenre(Integer count, Integer genreId) {
+        String sql = "SELECT " +
+                "*, " +
+                "mr.mpa_name, " +
+                "fr.genre_id " +
+                "FROM films f " +
+                "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
+                "LEFT JOIN film_genre fr ON f.film_id = fr.film_id " +
+                "WHERE genre_id = ? " +
+                "ORDER BY rate DESC " +
+                "LIMIT ?";
+        return jdbcTemplate.query(sql, this::mapRowToFilm, genreId, count);
+    }
+
+    @Override
+    public List<Film> getPopularFilmsByYear(Integer count, Integer year) {
+        String sql = "SELECT " +
+                "*, " +
+                "mr.mpa_name " +
+                "FROM films f " +
+                "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
+                "WHERE YEAR(film_releaseDate) = ?" +
+                "ORDER BY rate DESC " +
+                "LIMIT ?";
+        return jdbcTemplate.query(sql, this::mapRowToFilm, year, count);
     }
 
     private Film mapRowToFilm(ResultSet rs, int rowNum) throws SQLException {
@@ -130,7 +171,8 @@ public class FilmDbStorage implements FilmDao {
                 .id(rs.getInt("film_id"))
                 .name(rs.getString("film_name"))
                 .description(rs.getString("film_description"))
-                .releaseDate(rs.getDate("film_releasedate").toLocalDate())
+                .releaseDate(rs.getDate("film_releaseDate").toLocalDate())
+                .rate(rs.getInt("rate"))
                 .duration(rs.getInt("film_duration"))
                 .mpa(new Mpa(
                         rs.getInt("mpa_id"),
