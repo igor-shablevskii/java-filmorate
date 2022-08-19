@@ -86,7 +86,7 @@ public class FilmService {
         likeDbStorage.deleteLike(filmId, userId);
     }
 
-    public List<Film> getPopularFilms(int count,  Integer ... genreAndYear) {
+    public List<Film> getPopularFilms(int count, Integer... genreAndYear) {
         return filmDbStorage.getPopularFilms(count, genreAndYear)
                 .stream()
                 .peek(f -> f.getGenres().addAll(genreDbStorage.loadGenres(f.getId())))
@@ -114,5 +114,13 @@ public class FilmService {
 
     public void deleteFilmById(int filmId) {
         filmDbStorage.deleteFilmById(filmId);
+    }
+
+    public List<Film> getFilmRecommendations(int userId) {
+        return filmDbStorage.getFilmRecommendations(userId)
+                .stream()
+                .peek(f -> f.getGenres().addAll(genreDbStorage.loadGenres(f.getId())))
+                .peek(f -> f.getDirectors().addAll(directorDbStorage.loadDirectors(f.getId())))
+                .collect(Collectors.toList());
     }
 }
