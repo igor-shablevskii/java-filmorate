@@ -44,11 +44,15 @@ public interface FilmDao {
 
 
     // Метод удаляет фильм по id
-    public void deleteFilmById(int filmId);
+    void deleteFilmById(int filmId);
 
     /**
      * Получить список фильмов режиссёра
      * отсортированных по типу sortBy
      */
     List<Film> getSortedFilmsByDirectors(int directorId, String sortBy);
+
+/*    Метод возвращает список рекомендуемых фильмов по id пользователя, которым он не ставил лайки
+    через поиск максимального количества пересечений в лайках по остальным фильмам у другого пользователя*/
+    List<Film> getFilmRecommendations(int userId);
 }

@@ -83,7 +83,9 @@ public class FilmDbStorage implements FilmDao {
 
     @Override
     public List<Film> getPopularFilms(int count, Integer... genreAndYear) {
-        String sql = "SELECT films.*, mpa.mpa_name FROM films LEFT JOIN film_genre AS genres ON films.film_id = genres.film_id LEFT JOIN mpa_ratings AS mpa ON films.mpa_id = mpa.mpa_id LEFT JOIN film_likes AS likes ON films.film_id = likes.film_id";
+        String sql = "SELECT films.*, mpa.mpa_name FROM films LEFT JOIN film_genre AS genres ON films.film_id = genres.film_id " +
+                "LEFT JOIN mpa_ratings AS mpa ON films.mpa_id = mpa.mpa_id " +
+                "LEFT JOIN film_likes AS likes ON films.film_id = likes.film_id";
 
         if (genreAndYear[0] != null) {
             sql += " WHERE genres.genre_id = " + genreAndYear[0];
@@ -181,5 +183,28 @@ public class FilmDbStorage implements FilmDao {
 
         String sql = String.format("DELETE FROM films WHERE film_id = '%s'", filmId);
         jdbcTemplate.update(sql);
+    }
+
+    @Override
+    public List<Film> getFilmRecommendations(int userId) {
+
+        // проверка наличия пользователя по id в БД если хотя бы один пользователь не найден выбросить исключение
+        if (!userDbStorage.containsInStorage(userId))  {
+            throw new NotFoundException("User with id " + userId + " not found");
+        }
+
+        String sql = "WITH film_id_recommend AS (SELECT film_id FROM film_likes WHERE user_id = " +
+                "(WITH likes_count AS (SELECT user_id, COUNT(film_id) AS l_count FROM film_likes GROUP BY user_id), " +
+                "common_likes AS (SELECT * FROM film_likes WHERE film_id IN (SELECT film_id FROM film_likes " +
+                "WHERE user_id = " + userId + " INTERSECT SELECT film_id FROM film_likes WHERE user_id <> " + userId + ")) " +
+                "SELECT common_likes.user_id FROM common_likes LEFT JOIN likes_count ON likes_count.user_id = common_likes.user_id " +
+                "GROUP BY common_likes.user_id HAVING MAX(common_likes.user_id <> " + userId + ") " +
+                "AND l_count > (SELECT COUNT(*) FROM common_likes WHERE user_id = " + userId + ")) " +
+                "EXCEPT SELECT film_id FROM film_likes WHERE user_id = " + userId + ") " +
+                "SELECT films.*, mpa_ratings.mpa_name FROM film_id_recommend " +
+                "LEFT JOIN films ON film_id_recommend.film_id = films.film_id " +
+                "LEFT JOIN mpa_ratings ON films.mpa_id = mpa_ratings.mpa_id ";
+
+        return jdbcTemplate.query(sql, this::mapRowToFilm);
     }
 }

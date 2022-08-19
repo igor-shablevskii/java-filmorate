@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
 import ru.yandex.practicum.filmorate.dao.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -86,7 +87,7 @@ public class FilmService {
         likeDbStorage.deleteLike(filmId, userId);
     }
 
-    public List<Film> getPopularFilms(int count,  Integer ... genreAndYear) {
+    public List<Film> getPopularFilms(int count, Integer... genreAndYear) {
         return filmDbStorage.getPopularFilms(count, genreAndYear)
                 .stream()
                 .peek(f -> f.getGenres().addAll(genreDbStorage.loadGenres(f.getId())))
@@ -109,10 +110,22 @@ public class FilmService {
     }
 
     public List<Film> getUsersCommonFilms(int userId, int otherUserId) {
-        return filmDbStorage.getUsersCommonFilms(userId, otherUserId);
+        return filmDbStorage.getUsersCommonFilms(userId, otherUserId)
+                .stream()
+                .peek(f -> f.getGenres().addAll(genreDbStorage.loadGenres(f.getId())))
+                .peek(f -> f.getDirectors().addAll(directorDbStorage.loadDirectors(f.getId())))
+                .collect(Collectors.toList());
     }
 
     public void deleteFilmById(int filmId) {
         filmDbStorage.deleteFilmById(filmId);
+    }
+
+    public List<Film> getFilmRecommendations(int userId) {
+        return filmDbStorage.getFilmRecommendations(userId)
+                .stream()
+                .peek(f -> f.getGenres().addAll(genreDbStorage.loadGenres(f.getId())))
+                .peek(f -> f.getDirectors().addAll(directorDbStorage.loadDirectors(f.getId())))
+                .collect(Collectors.toList());
     }
 }
