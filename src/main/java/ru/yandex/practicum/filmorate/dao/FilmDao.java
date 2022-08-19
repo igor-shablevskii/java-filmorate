@@ -31,24 +31,53 @@ public interface FilmDao {
      * отсортированных по количеству лайков
      * пользователей по desc
      */
-    List<Film> getPopularFilms(int count);
+    List<Film> getPopularFilms(Integer count);
 
     /**
      * Проверка наличия фильма в БД
      */
     boolean containsInStorage(int filmId);
 
+    /**
+     * Получить список общих фильмов двух пользователей
+     * отсортированный по популярности
+     */
 
-    // Метод возвращает из БД список общих фильмов по id двух пользователей с сортировкой по популярности
     List<Film> getUsersCommonFilms(int userId, int otherUserId);
 
-
-    // Метод удаляет фильм по id
-    public void deleteFilmById(int filmId);
+    /**
+     * Удалить фильм по id
+     */
+    void deleteFilmById(int filmId);
 
     /**
      * Получить список фильмов режиссёра
      * отсортированных по типу sortBy
      */
     List<Film> getSortedFilmsByDirectors(int directorId, String sortBy);
+
+    /**
+     * Получить список фильмов
+     * отсортированных по количеству лайков
+     * пользователей по desc,
+     * фильтрованных по жанру и году
+     */
+    List<Film> getPopularFilmsByGenreAndYear(Integer count, Integer genreId, Integer year);
+
+    /**
+     * Получить список фильмов
+     * отсортированных по количеству лайков
+     * пользователей по desc,
+     * фильтрованных по жанру
+     */
+    List<Film> getPopularFilmsByGenre(Integer count, Integer genreId);
+
+    /**
+     * Получить список фильмов
+     * отсортированных по количеству лайков
+     * пользователей по desc,
+     * фильтрованных по году
+     */
+    List<Film> getPopularFilmsByYear(Integer count, Integer year);
+
 }
