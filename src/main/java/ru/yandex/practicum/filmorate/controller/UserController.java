@@ -96,6 +96,12 @@ public class UserController {
         return filmRecommendationsList;
     }
 
+    @DeleteMapping("/{userId}")
+    private void deleteUserById(@PathVariable int userId) {
+        log.info("Delete user by id = {}", userId);
+        userService.deleteUserById(userId);
+    }
+
     private void validate(User user) {
         String message;
         if (user.getEmail().isEmpty() || !user.getEmail().contains("@")) {
