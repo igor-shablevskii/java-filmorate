@@ -189,7 +189,6 @@ public class FilmDbStorage implements FilmDao {
 
     @Override
     public List<Film> getFilmRecommendations(int userId) {
-
         // проверка наличия пользователя по id в БД если не найден выбросить исключение
         if (!userDbStorage.containsInStorage(userId))  {
             throw new NotFoundException("User with id " + userId + " not found");
