@@ -14,7 +14,10 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
 
 @Repository
 public class FilmDbStorage implements FilmDao {
@@ -30,8 +33,8 @@ public class FilmDbStorage implements FilmDao {
 
     @Override
     public Film save(Film film) {
-        String sql = "INSERT INTO films (film_name, film_description, film_releasedate, film_duration, mpa_id)" +
-                "VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO films (film_name, film_description, film_releasedate, film_duration, rate, mpa_id)" +
+                "VALUES (?, ?, ?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement stmt = connection.prepareStatement(sql, new String[]{"film_id"});
@@ -39,7 +42,8 @@ public class FilmDbStorage implements FilmDao {
             stmt.setString(2, film.getDescription());
             stmt.setDate(3, Date.valueOf(film.getReleaseDate()));
             stmt.setInt(4, film.getDuration());
-            stmt.setInt(5, film.getMpa().getId());
+            stmt.setInt(5, film.getRate());
+            stmt.setInt(6, film.getMpa().getId());
             return stmt;
         }, keyHolder);
         int filmId = Objects.requireNonNull(keyHolder.getKey()).intValue();
@@ -50,12 +54,13 @@ public class FilmDbStorage implements FilmDao {
     @Override
     public Film update(Film film) {
         String sql = "UPDATE films SET film_name = ?, film_description = ?, film_releasedate = ?," +
-                "film_duration = ?, mpa_id = ? WHERE film_id = ?";
+                "film_duration = ?, rate = ?, mpa_id = ? WHERE film_id = ?";
         jdbcTemplate.update(sql,
                 film.getName(),
                 film.getDescription(),
                 film.getReleaseDate(),
                 film.getDuration(),
+                film.getRate(),
                 film.getMpa().getId(),
                 film.getId());
         return film;
@@ -82,28 +87,6 @@ public class FilmDbStorage implements FilmDao {
     }
 
     @Override
-    public List<Film> getPopularFilms(int count, Integer... genreAndYear) {
-        String sql = "SELECT films.*, mpa.mpa_name FROM films LEFT JOIN film_genre AS genres ON films.film_id = genres.film_id " +
-                "LEFT JOIN mpa_ratings AS mpa ON films.mpa_id = mpa.mpa_id " +
-                "LEFT JOIN film_likes AS likes ON films.film_id = likes.film_id";
-
-        if (genreAndYear[0] != null) {
-            sql += " WHERE genres.genre_id = " + genreAndYear[0];
-        }
-
-        if (genreAndYear[1] != null) {
-            if (genreAndYear[0] != null) {
-                sql += " AND year(film_releaseDate) = " + genreAndYear[1];
-            } else {
-                sql += " WHERE year(film_releaseDate) = " + genreAndYear[1];
-            }
-        }
-
-        sql += " GROUP BY films.film_id ORDER BY count(DISTINCT likes.user_id) DESC LIMIT " + count;
-
-        return jdbcTemplate.query(sql, this::mapRowToFilm);
-        }
-
     public List<Film> getSortedFilmsByDirectors(int directorId, String sortBy) {
         List<Film> listFilm;
         if (sortBy.equals("year")) {
@@ -128,12 +111,68 @@ public class FilmDbStorage implements FilmDao {
         return listFilm;
     }
 
+    @Override
+    public List<Film> getPopularFilms(Integer count) {
+        String sql = "SELECT " +
+                "*, " +
+                "mr.mpa_name " +
+                "FROM films f " +
+                "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
+                "ORDER BY rate DESC " +
+                "LIMIT ?";
+        return jdbcTemplate.query(sql, this::mapRowToFilm, count);
+    }
+
+    @Override
+    public List<Film> getPopularFilmsByGenreAndYear(Integer count, Integer genreId, Integer year) {
+        String sql = "SELECT " +
+                "*, " +
+                "mr.mpa_name, " +
+                "fr.genre_id " +
+                "FROM films f " +
+                "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
+                "LEFT JOIN film_genre fr ON f.film_id = fr.film_id " +
+                "WHERE genre_id = ? AND YEAR(film_releaseDate) = ? " +
+                "ORDER BY rate DESC " +
+                "LIMIT ?";
+        return jdbcTemplate.query(sql, this::mapRowToFilm, genreId, year, count);
+    }
+
+    @Override
+    public List<Film> getPopularFilmsByGenre(Integer count, Integer genreId) {
+        String sql = "SELECT " +
+                "*, " +
+                "mr.mpa_name, " +
+                "fr.genre_id " +
+                "FROM films f " +
+                "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
+                "LEFT JOIN film_genre fr ON f.film_id = fr.film_id " +
+                "WHERE genre_id = ? " +
+                "ORDER BY rate DESC " +
+                "LIMIT ?";
+        return jdbcTemplate.query(sql, this::mapRowToFilm, genreId, count);
+    }
+
+    @Override
+    public List<Film> getPopularFilmsByYear(Integer count, Integer year) {
+        String sql = "SELECT " +
+                "*, " +
+                "mr.mpa_name " +
+                "FROM films f " +
+                "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
+                "WHERE YEAR(film_releaseDate) = ?" +
+                "ORDER BY rate DESC " +
+                "LIMIT ?";
+        return jdbcTemplate.query(sql, this::mapRowToFilm, year, count);
+    }
+
     private Film mapRowToFilm(ResultSet rs, int rowNum) throws SQLException {
         return Film.builder()
                 .id(rs.getInt("film_id"))
                 .name(rs.getString("film_name"))
                 .description(rs.getString("film_description"))
-                .releaseDate(rs.getDate("film_releasedate").toLocalDate())
+                .releaseDate(rs.getDate("film_releaseDate").toLocalDate())
+                .rate(rs.getInt("rate"))
                 .duration(rs.getInt("film_duration"))
                 .mpa(new Mpa(
                         rs.getInt("mpa_id"),
@@ -150,10 +189,10 @@ public class FilmDbStorage implements FilmDao {
 
         // проверка наличия пользователей по id в БД
         if (!userDbStorage.containsInStorage(userId)) {
-            excIdMsg = " first id " + userId + ". ";
+            excIdMsg = " first id " + userId;
         }
         if (!userDbStorage.containsInStorage(otherUserId)) {
-            excIdMsg += " second id " + otherUserId + ". ";
+            excIdMsg += " second id " + otherUserId;
         }
 
         // если хотя бы один пользователь не найден выбросить исключение
@@ -183,27 +222,5 @@ public class FilmDbStorage implements FilmDao {
 
         String sql = String.format("DELETE FROM films WHERE film_id = '%s'", filmId);
         jdbcTemplate.update(sql);
-    }
-
-    @Override
-    public List<Film> getFilmRecommendations(int userId) {
-        // проверка наличия пользователя по id в БД если хотя бы один пользователь не найден выбросить исключение
-        if (!userDbStorage.containsInStorage(userId))  {
-            throw new NotFoundException("User with id " + userId + " not found");
-        }
-
-        String sql = "WITH film_id_recommend AS (SELECT film_id FROM film_likes WHERE user_id = " +
-                "(WITH likes_count AS (SELECT user_id, COUNT(film_id) AS l_count FROM film_likes GROUP BY user_id), " +
-                "common_likes AS (SELECT * FROM film_likes WHERE film_id IN (SELECT film_id FROM film_likes " +
-                "WHERE user_id = " + userId + " INTERSECT SELECT film_id FROM film_likes WHERE user_id <> " + userId + ")) " +
-                "SELECT common_likes.user_id FROM common_likes LEFT JOIN likes_count ON likes_count.user_id = common_likes.user_id " +
-                "GROUP BY common_likes.user_id HAVING MAX(common_likes.user_id <> " + userId + ") " +
-                "AND l_count > (SELECT COUNT(*) FROM common_likes WHERE user_id = " + userId + ")) " +
-                "EXCEPT SELECT film_id FROM film_likes WHERE user_id = " + userId + ") " +
-                "SELECT films.*, mpa_ratings.mpa_name FROM film_id_recommend " +
-                "LEFT JOIN films ON film_id_recommend.film_id = films.film_id " +
-                "LEFT JOIN mpa_ratings ON films.mpa_id = mpa_ratings.mpa_id ";
-
-        return jdbcTemplate.query(sql, this::mapRowToFilm);
     }
 }

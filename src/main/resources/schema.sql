@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS films
     film_description text         NOT NULL,
     film_releaseDate date         NOT NULL,
     film_duration    INTEGER      NOT NULL,
-    mpa_id           INTEGER REFERENCES mpa_ratings (mpa_id)
+    mpa_id           INTEGER REFERENCES mpa_ratings (mpa_id),
+    rate             INTEGER      NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS film_genre

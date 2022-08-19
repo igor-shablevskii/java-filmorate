@@ -31,17 +31,23 @@ public interface FilmDao {
      * отсортированных по количеству лайков
      * пользователей по desc
      */
-    List<Film> getPopularFilms(int count, Integer ... genreAndYear);
+    List<Film> getPopularFilms(Integer count);
 
     /**
      * Проверка наличия фильма в БД
      */
     boolean containsInStorage(int filmId);
 
-    // Метод возвращает из БД список общих фильмов по id двух пользователей с сортировкой по популярности
+    /**
+     * Получить список общих фильмов двух пользователей
+     * отсортированный по популярности
+     */
+
     List<Film> getUsersCommonFilms(int userId, int otherUserId);
 
-    // Метод удаляет фильм по id
+    /**
+     * Удалить фильм по id
+     */
     void deleteFilmById(int filmId);
 
     /**
@@ -50,7 +56,28 @@ public interface FilmDao {
      */
     List<Film> getSortedFilmsByDirectors(int directorId, String sortBy);
 
-/*    Метод возвращает список рекомендуемых фильмов по id пользователя, которым он не ставил лайки
-    через поиск максимального количества пересечений в лайках по остальным фильмам у другого пользователя*/
-    List<Film> getFilmRecommendations(int userId);
+    /**
+     * Получить список фильмов
+     * отсортированных по количеству лайков
+     * пользователей по desc,
+     * фильтрованных по жанру и году
+     */
+    List<Film> getPopularFilmsByGenreAndYear(Integer count, Integer genreId, Integer year);
+
+    /**
+     * Получить список фильмов
+     * отсортированных по количеству лайков
+     * пользователей по desc,
+     * фильтрованных по жанру
+     */
+    List<Film> getPopularFilmsByGenre(Integer count, Integer genreId);
+
+    /**
+     * Получить список фильмов
+     * отсортированных по количеству лайков
+     * пользователей по desc,
+     * фильтрованных по году
+     */
+    List<Film> getPopularFilmsByYear(Integer count, Integer year);
+
 }

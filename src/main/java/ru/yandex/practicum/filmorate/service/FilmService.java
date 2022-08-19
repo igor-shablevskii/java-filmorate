@@ -2,11 +2,11 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
 import ru.yandex.practicum.filmorate.dao.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -46,6 +46,7 @@ public class FilmService {
         Film updatedFilm = filmDbStorage.update(film);
         genreDbStorage.setGenre(updatedFilm);
         directorDbStorage.setDirector(updatedFilm);
+        System.out.println(updatedFilm.getRate());
         return updatedFilm;
     }
 
@@ -75,6 +76,9 @@ public class FilmService {
             throw new NotFoundException("User with id = " + userId + " not found");
         }
         likeDbStorage.saveLike(filmId, userId);
+        Film film = getFilmById(filmId);
+        film.setRate(film.getRate() + 1);
+        update(film);
     }
 
     public void deleteLike(int filmId, int userId) {
@@ -85,13 +89,27 @@ public class FilmService {
             throw new NotFoundException("User with id = " + userId + " not found");
         }
         likeDbStorage.deleteLike(filmId, userId);
+        Film film = getFilmById(filmId);
+        film.setRate(film.getRate() - 1);
+        update(film);
     }
 
-    public List<Film> getPopularFilms(int count, Integer... genreAndYear) {
-        return filmDbStorage.getPopularFilms(count, genreAndYear)
+    public List<Film> getPopularFilms(Integer count, Integer genreId, Integer yearId) {
+        List<Film> popularFilms;
+        if (genreId != null && yearId != null) {
+            popularFilms = filmDbStorage.getPopularFilmsByGenreAndYear(count, genreId, yearId);
+        } else if (genreId != null) {
+            popularFilms = filmDbStorage.getPopularFilmsByGenre(count, genreId);
+        } else if (yearId != null) {
+            popularFilms = filmDbStorage.getPopularFilmsByYear(count, yearId);
+        } else {
+            popularFilms = filmDbStorage.getPopularFilms(count);
+        }
+        return popularFilms
                 .stream()
                 .peek(f -> f.getGenres().addAll(genreDbStorage.loadGenres(f.getId())))
                 .peek(f -> f.getDirectors().addAll(directorDbStorage.loadDirectors(f.getId())))
+                .sorted(Comparator.comparingInt(Film::getRate).reversed())
                 .collect(Collectors.toList());
     }
 
@@ -110,22 +128,10 @@ public class FilmService {
     }
 
     public List<Film> getUsersCommonFilms(int userId, int otherUserId) {
-        return filmDbStorage.getUsersCommonFilms(userId, otherUserId)
-                .stream()
-                .peek(f -> f.getGenres().addAll(genreDbStorage.loadGenres(f.getId())))
-                .peek(f -> f.getDirectors().addAll(directorDbStorage.loadDirectors(f.getId())))
-                .collect(Collectors.toList());
+        return filmDbStorage.getUsersCommonFilms(userId, otherUserId);
     }
 
     public void deleteFilmById(int filmId) {
         filmDbStorage.deleteFilmById(filmId);
-    }
-
-    public List<Film> getFilmRecommendations(int userId) {
-        return filmDbStorage.getFilmRecommendations(userId)
-                .stream()
-                .peek(f -> f.getGenres().addAll(genreDbStorage.loadGenres(f.getId())))
-                .peek(f -> f.getDirectors().addAll(directorDbStorage.loadDirectors(f.getId())))
-                .collect(Collectors.toList());
     }
 }
