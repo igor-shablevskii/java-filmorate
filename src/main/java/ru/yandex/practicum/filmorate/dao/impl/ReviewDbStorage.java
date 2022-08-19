@@ -47,11 +47,12 @@ public class ReviewDbStorage implements ReviewDao {
 
     @Override
     public Review update(Review review) {
-        String sql = "UPDATE reviews SET content = ?, is_positive = ?";
+        String sql = "UPDATE reviews SET content = ?, is_positive = ? WHERE review_id = ?";
         jdbcTemplate.update(sql,
                 review.getContent(),
-                review.getIsPositive());
-        return review;
+                review.getIsPositive(),
+                review.getReviewId());
+        return getReviewById(review.getReviewId());
     }
 
     @Override
@@ -74,7 +75,7 @@ public class ReviewDbStorage implements ReviewDao {
 
     @Override
     public void deleteReview(int reviewId) {
-        String sql = "DELETE FROM reviews WHERE review_id = ?;";
+        String sql = "DELETE FROM reviews WHERE review_id = ?";
         jdbcTemplate.update(sql, reviewId);
     }
 
@@ -97,5 +98,3 @@ public class ReviewDbStorage implements ReviewDao {
                 .build();
     }
 }
-
-

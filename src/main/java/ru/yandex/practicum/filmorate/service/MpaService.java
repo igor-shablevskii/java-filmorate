@@ -11,21 +11,21 @@ import java.util.List;
 @Service
 public class MpaService {
 
-    private final MpaDao mpaDbStorage;
+    private final MpaDao mpaDao;
 
     @Autowired
-    public MpaService(MpaDao mpaDbStorage) {
-        this.mpaDbStorage = mpaDbStorage;
+    public MpaService(MpaDao mpaDao) {
+        this.mpaDao = mpaDao;
     }
 
     public Mpa getMpaById(int id) {
-        if (!mpaDbStorage.containsInStorage(id)) {
+        if (!mpaDao.containsInStorage(id)) {
             throw new NotFoundException("MPA with id = " + id + " not found");
         }
-        return mpaDbStorage.getMpaById(id);
+        return mpaDao.getMpaById(id);
     }
 
     public List<Mpa> getAllMpa() {
-        return mpaDbStorage.getAllMpa();
+        return mpaDao.getAllMpa();
     }
 }

@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dao.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Comparator;
@@ -18,18 +19,21 @@ public class FilmService {
     private final GenreDao genreDbStorage;
     private final LikeDao likeDbStorage;
     private final DirectorDao directorDbStorage;
+    private final FeedDao feedDbStorage;
 
     @Autowired
     public FilmService(FilmDao filmDbStorage,
                        UserDao userDbStorage,
                        GenreDao genreDbStorage,
                        LikeDao likeDbStorage,
-                       DirectorDao directorDbStorage) {
+                       DirectorDao directorDbStorage,
+                       FeedDao feedDbStorage) {
         this.filmDbStorage = filmDbStorage;
         this.userDbStorage = userDbStorage;
         this.genreDbStorage = genreDbStorage;
         this.likeDbStorage = likeDbStorage;
         this.directorDbStorage = directorDbStorage;
+        this.feedDbStorage = feedDbStorage;
     }
 
     public Film create(Film film) {
@@ -76,6 +80,7 @@ public class FilmService {
             throw new NotFoundException("User with id = " + userId + " not found");
         }
         likeDbStorage.saveLike(filmId, userId);
+        feedDbStorage.create(new Feed(userId, "LIKE", "ADD", filmId));
         Film film = getFilmById(filmId);
         film.setRate(film.getRate() + 1);
         update(film);
@@ -89,6 +94,7 @@ public class FilmService {
             throw new NotFoundException("User with id = " + userId + " not found");
         }
         likeDbStorage.deleteLike(filmId, userId);
+        feedDbStorage.create(new Feed(userId, "LIKE", "REMOVE", filmId));
         Film film = getFilmById(filmId);
         film.setRate(film.getRate() - 1);
         update(film);

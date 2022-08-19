@@ -2,11 +2,13 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dao.FeedDao;
 import ru.yandex.practicum.filmorate.dao.FilmDao;
 import ru.yandex.practicum.filmorate.dao.ReactionDao;
 import ru.yandex.practicum.filmorate.dao.UserDao;
 import ru.yandex.practicum.filmorate.dao.impl.ReviewDbStorage;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Reaction;
 import ru.yandex.practicum.filmorate.model.ReactionType;
 import ru.yandex.practicum.filmorate.model.Review;
@@ -21,31 +23,41 @@ public class ReviewService {
 
     private final ReviewDbStorage reviewDao;
     private final UserDao userDao;
-
     private final ReactionDao reactionDao;
-
     private final FilmDao filmDao;
+    private final FeedDao feedDao;
 
     @Autowired
-    public ReviewService(ReviewDbStorage reviewDao, UserDao userDao, ReactionDao reactionDao, FilmDao filmDao) {
+    public ReviewService(ReviewDbStorage reviewDao,
+                         UserDao userDao,
+                         ReactionDao reactionDao,
+                         FilmDao filmDao,
+                         FeedDao feedDao) {
         this.reviewDao = reviewDao;
         this.userDao = userDao;
         this.reactionDao = reactionDao;
         this.filmDao = filmDao;
+        this.feedDao = feedDao;
     }
 
     public Review save(Review review) {
         review.setUseful(0);
         isUserExists(review.getUserId());
         isFilmExists(review.getFilmId());
-        return reviewDao.save(review);
+        Review savedReview = reviewDao.save(review);
+        Feed feed = new Feed(savedReview.getUserId(), "REVIEW", "ADD", review.getReviewId());
+        feedDao.create(feed);
+        return savedReview;
     }
 
     public Review update(Review review) {
         isUserExists(review.getUserId());
         isFilmExists(review.getFilmId());
         isReviewExists(review.getReviewId());
-        return reviewDao.update(review);
+        Review updatedReview = reviewDao.update(review);
+        Feed feed = new Feed(updatedReview.getUserId(), "REVIEW", "UPDATE", review.getReviewId());
+        feedDao.create(feed);
+        return updatedReview;
     }
 
     public List<Review> getReviews(Integer count, Integer filmId) {
@@ -75,6 +87,9 @@ public class ReviewService {
 
     public void deleteReview(int reviewId) {
         isReviewExists(reviewId);
+        Review review = getReviewById(reviewId);
+        Feed feed = new Feed(review.getUserId(), "REVIEW", "REMOVE", reviewId);
+        feedDao.create(feed);
         reviewDao.deleteReview(reviewId);
     }
 

@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
@@ -79,8 +80,15 @@ public class UserController {
         return listCommonFriends;
     }
 
+    @GetMapping(value = "/{id}/feed")
+    public List<Feed> getAllFeedsByUserId(@PathVariable int id) {
+        List<Feed> feedList = userService.getAllFeedsByUserId(id);
+        log.info("Get list feeds user id = {}, list ids = {}", id, feedList.size());
+        return feedList;
+    }
+
     @DeleteMapping("/{userId}")
-    private void deleteUserById(@PathVariable int userId) {
+    public void deleteUserById(@PathVariable int userId) {
         log.info("Delete user by id = {}", userId);
         userService.deleteUserById(userId);
     }

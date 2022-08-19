@@ -36,6 +36,8 @@ public interface UserDao {
      */
     User getUserById(int userId);
 
-    // Метод удаляет пользователя по id
-    public void deleteUserById(int userId);
+    /**
+     * Удалить пользователя по id
+     */
+    void deleteUserById(int userId);
 }
