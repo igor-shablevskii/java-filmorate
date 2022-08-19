@@ -128,4 +128,8 @@ public class FilmService {
                 .peek(f -> f.getDirectors().addAll(directorDbStorage.loadDirectors(f.getId())))
                 .collect(Collectors.toList());
     }
+
+    public void deleteFilmById(int filmId) {
+        filmDbStorage.deleteFilmById(filmId);
+    }
 }

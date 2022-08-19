@@ -38,10 +38,8 @@ public interface FilmDao {
      */
     boolean containsInStorage(int filmId);
 
-
     // Метод возвращает из БД список общих фильмов по id двух пользователей с сортировкой по популярности
     List<Film> getUsersCommonFilms(int userId, int otherUserId);
-
 
     // Метод удаляет фильм по id
     void deleteFilmById(int filmId);
