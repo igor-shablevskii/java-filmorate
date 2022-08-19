@@ -31,7 +31,7 @@ public class FilmDbStorage implements FilmDao {
     @Override
     public Film save(Film film) {
         String sql = "INSERT INTO films (film_name, film_description, film_releasedate, film_duration, mpa_id)" +
-                "VALUES (?, ?, ?, ?, ?);";
+                "VALUES (?, ?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement stmt = connection.prepareStatement(sql, new String[]{"film_id"});
@@ -63,27 +63,29 @@ public class FilmDbStorage implements FilmDao {
 
     @Override
     public List<Film> getAllFilms() {
-        String sql = "SELECT * FROM films f LEFT JOIN mpa_ratings m ON f.mpa_id = m.mpa_id;";
+        String sql = "SELECT * FROM films f LEFT JOIN mpa_ratings m ON f.mpa_id = m.mpa_id";
         return jdbcTemplate.query(sql, this::mapRowToFilm);
     }
 
     @Override
     public Film getFilmById(int filmId) {
         String sql = "SELECT * FROM films f left JOIN mpa_ratings m ON F.mpa_id = m.mpa_id " +
-                "WHERE f.film_id = ?;";
+                "WHERE f.film_id = ?";
         return jdbcTemplate.queryForObject(sql, this::mapRowToFilm, filmId);
     }
 
     @Override
     public boolean containsInStorage(int filmId) {
-        String sqlQuery = "SELECT count(*) FROM films WHERE film_id = ?;";
+        String sqlQuery = "SELECT count(*) FROM films WHERE film_id = ?";
         int result = jdbcTemplate.queryForObject(sqlQuery, Integer.class, filmId);
         return result == 1;
     }
 
     @Override
     public List<Film> getPopularFilms(int count, Integer... genreAndYear) {
-        String sql = "SELECT films.*, mpa.mpa_name FROM films LEFT JOIN film_genre AS genres ON films.film_id = genres.film_id LEFT JOIN mpa_ratings AS mpa ON films.mpa_id = mpa.mpa_id LEFT JOIN film_likes AS likes ON films.film_id = likes.film_id";
+               String sql = "SELECT films.*, mpa.mpa_name FROM films LEFT JOIN film_genre AS genres ON films.film_id = genres.film_id " +
+                "LEFT JOIN mpa_ratings AS mpa ON films.mpa_id = mpa.mpa_id " +
+                "LEFT JOIN film_likes AS likes ON films.film_id = likes.film_id";
 
         if (genreAndYear[0] != null) {
             sql += " WHERE genres.genre_id = " + genreAndYear[0];

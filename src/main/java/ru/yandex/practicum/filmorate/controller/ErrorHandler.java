@@ -14,19 +14,19 @@ public class ErrorHandler {
 
     @ExceptionHandler
     public ResponseEntity<?> handleValidationException(final ValidationException e) {
-        log.info("400 {}", e.getMessage());
+        log.error("400 {}", e.getMessage(),e);
         return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
     public ResponseEntity<?> handleNotFoundException(final NotFoundException e) {
-        log.info("404 {}", e.getMessage());
+        log.error("404 {}", e.getMessage(),e);
         return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler
     public ResponseEntity<?> handleException(final RuntimeException e) {
-        log.info("500 {}", e.getMessage());
+        log.error("500 {}", e.getMessage(), e);
         return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
