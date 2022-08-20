@@ -134,4 +134,11 @@ public class FilmService {
     public void deleteFilmById(int filmId) {
         filmDbStorage.deleteFilmById(filmId);
     }
+
+    public List<Film> getFilmRecommendations(Integer userId) {
+        return filmDbStorage.getFilmRecommendations(userId).stream()
+                .peek(f -> f.getGenres().addAll(genreDbStorage.loadGenres(f.getId())))
+                .peek(f -> f.getDirectors().addAll(directorDbStorage.loadDirectors(f.getId())))
+                .collect(Collectors.toList());
+    }
 }

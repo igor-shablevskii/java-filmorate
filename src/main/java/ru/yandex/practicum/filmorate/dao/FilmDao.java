@@ -43,6 +43,7 @@ public interface FilmDao {
      * отсортированный по популярности
      */
 
+    // Метод возвращает из БД список общих фильмов по id двух пользователей с сортировкой по популярности
     List<Film> getUsersCommonFilms(int userId, int otherUserId);
 
     /**
@@ -79,5 +80,11 @@ public interface FilmDao {
      * фильтрованных по году
      */
     List<Film> getPopularFilmsByYear(Integer count, Integer year);
+
+    /**
+     * Получить список рекомендованных
+     * для пользователя фильмов
+     */
+    List<Film> getFilmRecommendations(Integer userId);
 
 }

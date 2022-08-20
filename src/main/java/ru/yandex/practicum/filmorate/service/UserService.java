@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dao.FriendDao;
 import ru.yandex.practicum.filmorate.dao.UserDao;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.List;
@@ -15,11 +16,13 @@ public class UserService {
 
     private final UserDao userDbStorage;
     private final FriendDao friendDbStorage;
+    private final FilmService filmService;
 
     @Autowired
-    public UserService(UserDao userDbStorage, FriendDao friendDbStorage) {
+    public UserService(UserDao userDbStorage, FriendDao friendDbStorage, FilmService filmService) {
         this.userDbStorage = userDbStorage;
         this.friendDbStorage = friendDbStorage;
+        this.filmService = filmService;
     }
 
     public User save(User user) {
@@ -80,6 +83,13 @@ public class UserService {
         return friends.stream()
                 .filter(otherFriends::contains)
                 .collect(Collectors.toList());
+    }
+
+    public List<Film> getFilmRecommendations(Integer userId) {
+        if (!userDbStorage.containsInStorage(userId)) {
+            throw new NotFoundException("User with id = " + userId + " not found");
+        }
+        return filmService.getFilmRecommendations(userId);
     }
 
     public void deleteUserById(int userId) {
