@@ -5,8 +5,10 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dao.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Feed;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -147,4 +149,30 @@ public class FilmService {
                 .peek(f -> f.getDirectors().addAll(directorDbStorage.loadDirectors(f.getId())))
                 .collect(Collectors.toList());
     }
+
+    public List<Film> search(String query, String by) {
+        final String TITLE = "title";
+        final String DIRECTOR = "director";
+        List<Film> films = new ArrayList<>();
+
+        // если by == null или by не содержит ключевых слов:
+        if (by == null || (!by.contains(TITLE) && !by.contains(DIRECTOR))) {
+            throw new ValidationException("There isn't type for search. Use by=director,title");
+            // если by содержит оба ключевых слова:
+        } else if (by.contains(TITLE) && by.contains(DIRECTOR)) {
+            films.addAll(filmDbStorage.searchByTitleAndDirector(query));
+            // если by содержит только слово title:
+        } else if (by.contains(TITLE)) {
+            films.addAll(filmDbStorage.searchByTitleOnly(query));
+            // если by содержит только слово director:
+        } else {
+            films.addAll(filmDbStorage.searchByDirectorOnly(query));
+        }
+
+        return films.stream()
+                .peek(f -> f.getGenres().addAll(genreDbStorage.loadGenres(f.getId())))
+                .peek(f -> f.getDirectors().addAll(directorDbStorage.loadDirectors(f.getId())))
+                .collect(Collectors.toList());
+    }
+
 }

@@ -248,4 +248,47 @@ public class FilmDbStorage implements FilmDao {
                 .directors(new HashSet<>())
                 .build();
     }
+
+    @Override
+    public List<Film> searchByTitleOnly(String query) {
+        final String sql =
+                "SELECT f.film_id, f.film_name, f.film_description, f.film_releasedate, f.film_duration, " +
+                "f.mpa_id, mr.mpa_name, f.rate " +
+                "FROM films f " +
+                "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
+                "WHERE LOWER(f.film_name) LIKE LOWER(?) " +
+                "ORDER BY f.rate DESC";
+        return jdbcTemplate.query(sql, this::mapRowToFilm, "%" + query + "%");
+    }
+
+    @Override
+    public List<Film> searchByDirectorOnly(String query) {
+        final String sql = "SELECT f.film_id, f.film_name, f.film_description, f.film_releasedate, f.film_duration, " +
+                "f.mpa_id, mr.mpa_name, f.rate " +
+                "FROM directors d " +
+                "LEFT JOIN film_director fd ON d.director_id = fd.director_id " +
+                "LEFT JOIN films f ON fd.film_id = f.film_id " +
+                "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
+                "WHERE LOWER(d.director_name) LIKE LOWER(?) " +
+                "GROUP BY f.film_id " +
+                "ORDER BY f.rate DESC";
+        return jdbcTemplate.query(sql, this::mapRowToFilm, "%" + query + "%");
+    }
+
+    @Override
+    public List<Film> searchByTitleAndDirector(String query) {
+        final String sql = "SELECT f.film_id, f.film_name, f.film_description, f.film_releasedate, f.film_duration, " +
+                "f.mpa_id, mr.mpa_name, f.rate " +
+                "FROM films f " +
+                "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
+                "LEFT JOIN film_director fd ON f.film_id = fd.film_id " +
+                "LEFT JOIN directors d ON fd.director_id = d.director_id " +
+                "WHERE LOWER(f.film_name) LIKE LOWER(?) " +
+                "OR LOWER(d.director_name) LIKE LOWER(?) " +
+                "GROUP BY f.film_id " +
+                "ORDER BY f.rate DESC";
+        final String queryString = "%" + query + "%";
+        return jdbcTemplate.query(sql, this::mapRowToFilm, queryString, queryString);
+    }
+
 }

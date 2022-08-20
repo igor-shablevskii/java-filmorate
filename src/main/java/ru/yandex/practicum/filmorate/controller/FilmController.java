@@ -94,6 +94,13 @@ public class FilmController {
         return filmService.getSortedFilmsByDirectors(directorId, sortBy);
     }
 
+    @GetMapping("/search")
+    public List<Film> search(@RequestParam(name = "query") String query,
+                             @RequestParam(name = "by") String by) {
+        log.info("Search films. Query: {}, by: {}", query, by);
+        return filmService.search(query, by);
+    }
+
     private void validate(Film film) {
         String message;
         if (film.getName().isEmpty()) {
