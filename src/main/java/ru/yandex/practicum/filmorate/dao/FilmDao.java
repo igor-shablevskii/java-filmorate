@@ -80,4 +80,10 @@ public interface FilmDao {
      */
     List<Film> getPopularFilmsByYear(Integer count, Integer year);
 
+    /**
+     * Получить список рекомендованных
+     * для пользователя фильмов
+     */
+    List<Film> getFilmRecommendations(Integer userId);
+
 }

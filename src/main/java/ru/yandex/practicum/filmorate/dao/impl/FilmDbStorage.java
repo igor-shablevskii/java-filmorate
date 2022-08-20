@@ -91,7 +91,7 @@ public class FilmDbStorage implements FilmDao {
         List<Film> listFilm;
         if (sortBy.equals("year")) {
             String sql = "SELECT f.film_id, f.film_name, f.film_description, f.film_releasedate, " +
-                    "f.film_duration, f.mpa_id, mr.mpa_name FROM films f " +
+                    "f.rate, f.film_duration, f.mpa_id, mr.mpa_name FROM films f " +
                     "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
                     "LEFT JOIN film_director fd ON f.film_id = fd.film_id " +
                     "WHERE fd.director_id = ? " +
@@ -99,7 +99,7 @@ public class FilmDbStorage implements FilmDao {
             listFilm = jdbcTemplate.query(sql, this::mapRowToFilm, directorId);
         } else {
             String sql = "SELECT f.film_id, f.film_name, f.film_description, f.film_releasedate, " +
-                    "f.film_duration, f.mpa_id, mr.mpa_name FROM films f " +
+                    "f.rate, f.film_duration, f.mpa_id, mr.mpa_name FROM films f " +
                     "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
                     "LEFT JOIN film_likes fl ON f.film_id = fl.film_id " +
                     "LEFT JOIN film_director fd ON f.FILM_ID = fd.FILM_ID " +
@@ -166,20 +166,29 @@ public class FilmDbStorage implements FilmDao {
         return jdbcTemplate.query(sql, this::mapRowToFilm, year, count);
     }
 
-    private Film mapRowToFilm(ResultSet rs, int rowNum) throws SQLException {
-        return Film.builder()
-                .id(rs.getInt("film_id"))
-                .name(rs.getString("film_name"))
-                .description(rs.getString("film_description"))
-                .releaseDate(rs.getDate("film_releaseDate").toLocalDate())
-                .rate(rs.getInt("rate"))
-                .duration(rs.getInt("film_duration"))
-                .mpa(new Mpa(
-                        rs.getInt("mpa_id"),
-                        rs.getString("mpa_name")))
-                .genres(new LinkedHashSet<>())
-                .directors(new HashSet<>())
-                .build();
+    @Override
+    public List<Film> getFilmRecommendations(Integer userId) {
+        String sql = "WITH film_id_recommend AS " +
+                "(SELECT film_id FROM film_likes WHERE user_id = " +
+                "(WITH likes_count AS (SELECT user_id, COUNT(film_id) AS l_count " +
+                "FROM film_likes GROUP BY user_id), " +
+                "common_likes AS (SELECT * FROM film_likes " +
+                "WHERE film_id IN (SELECT film_id FROM film_likes " +
+                "WHERE user_id = ? " +
+                "INTERSECT SELECT film_id FROM film_likes " +
+                "WHERE user_id <> ?)) " +
+                "SELECT common_likes.user_id FROM common_likes " +
+                "LEFT JOIN likes_count ON likes_count.user_id = common_likes.user_id " +
+                "GROUP BY common_likes.user_id " +
+                "HAVING MAX(common_likes.user_id <> ?) AND l_count > " +
+                "(SELECT COUNT(*) FROM common_likes " +
+                "WHERE user_id = ?)) " +
+                "EXCEPT SELECT film_id FROM film_likes WHERE user_id = ?) " +
+                "SELECT films.*, mpa_ratings.mpa_name FROM film_id_recommend " +
+                "LEFT JOIN films ON film_id_recommend.film_id = films.film_id " +
+                "LEFT JOIN mpa_ratings ON films.mpa_id = mpa_ratings.mpa_id ";
+
+        return jdbcTemplate.query(sql, this::mapRowToFilm, userId, userId, userId, userId, userId);
     }
 
     @Override
@@ -222,5 +231,21 @@ public class FilmDbStorage implements FilmDao {
 
         String sql = String.format("DELETE FROM films WHERE film_id = '%s'", filmId);
         jdbcTemplate.update(sql);
+    }
+
+    private Film mapRowToFilm(ResultSet rs, int rowNum) throws SQLException {
+        return Film.builder()
+                .id(rs.getInt("film_id"))
+                .name(rs.getString("film_name"))
+                .description(rs.getString("film_description"))
+                .releaseDate(rs.getDate("film_releaseDate").toLocalDate())
+                .rate(rs.getInt("rate"))
+                .duration(rs.getInt("film_duration"))
+                .mpa(new Mpa(
+                        rs.getInt("mpa_id"),
+                        rs.getString("mpa_name")))
+                .genres(new LinkedHashSet<>())
+                .directors(new HashSet<>())
+                .build();
     }
 }

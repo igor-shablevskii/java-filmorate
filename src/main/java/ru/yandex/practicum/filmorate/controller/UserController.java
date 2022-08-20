@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
@@ -20,12 +19,10 @@ import java.util.stream.Collectors;
 public class UserController {
 
     private final UserService userService;
-    private final FilmService filmService;
 
     @Autowired
-    public UserController(UserService userService, FilmService filmService) {
+    public UserController(UserService userService) {
         this.userService = userService;
-        this.filmService = filmService;
     }
 
     @GetMapping("/{userId}")
@@ -76,10 +73,10 @@ public class UserController {
 
     @GetMapping("/{userId}/friends/common/{otherUserId}")
     public List<User> getCommonFriends(@PathVariable int userId, @PathVariable int otherUserId) {
-        List<User> commonFriendsList = userService.getCommonFriends(userId, otherUserId);
+        List<User> listCommonFriends = userService.getCommonFriends(userId, otherUserId);
         log.info("Get list common friends user id = {} and user id = {}, list ids = {}",
-                userId, otherUserId, commonFriendsList.stream().map(User::getId).collect(Collectors.toList()));
-        return commonFriendsList;
+                userId, otherUserId, listCommonFriends.stream().map(User::getId).collect(Collectors.toList()));
+        return listCommonFriends;
     }
 
     @DeleteMapping("/{userId}")
@@ -88,12 +85,13 @@ public class UserController {
         userService.deleteUserById(userId);
     }
 
-    @GetMapping("/{userId}/recommendations")
-    public List<Film> getFilmRecommendations(@PathVariable int userId) {
-        List<Film> filmRecommendationsList = filmService.getFilmRecommendations(userId);
-        log.info("Get recommendations films by user id = {}, list ids = {}", userId,
-                filmRecommendationsList.stream().map(Film::getId).collect(Collectors.toList()));
-        return filmRecommendationsList;
+    @GetMapping("{id}/recommendations")
+    public List<Film> getFilmRecommendations(@PathVariable int id) {
+        List<Film> recommendations = userService.getFilmRecommendations(id);
+        log.info("Get recommendations ids = {}", recommendations.stream()
+                .map(Film::getId)
+                .collect(Collectors.toList()));
+        return recommendations;
     }
 
     private void validate(User user) {
