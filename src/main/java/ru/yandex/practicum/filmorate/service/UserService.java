@@ -2,9 +2,11 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dao.FeedDao;
 import ru.yandex.practicum.filmorate.dao.FriendDao;
 import ru.yandex.practicum.filmorate.dao.UserDao;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -17,12 +19,17 @@ public class UserService {
     private final UserDao userDbStorage;
     private final FriendDao friendDbStorage;
     private final FilmService filmService;
+    private final FeedDao feedDBStorage;
 
     @Autowired
-    public UserService(UserDao userDbStorage, FriendDao friendDbStorage, FilmService filmService) {
+    public UserService(UserDao userDbStorage,
+                       FriendDao friendDbStorage,
+                       FilmService filmService,
+                       FeedDao feedDBStorage) {
         this.userDbStorage = userDbStorage;
         this.friendDbStorage = friendDbStorage;
         this.filmService = filmService;
+        this.feedDBStorage = feedDBStorage;
     }
 
     public User save(User user) {
@@ -54,6 +61,7 @@ public class UserService {
         if (!userDbStorage.containsInStorage(friendId)) {
             throw new NotFoundException("User with id = " + friendId + " not found");
         }
+        feedDBStorage.create(new Feed(userId, "FRIEND", "ADD", friendId));
         friendDbStorage.saveFriend(userId, friendId);
     }
 
@@ -64,6 +72,7 @@ public class UserService {
         if (!userDbStorage.containsInStorage(friendId)) {
             throw new NotFoundException("User with id = " + friendId + " not found");
         }
+        feedDBStorage.create(new Feed(userId, "FRIEND", "REMOVE", friendId));
         friendDbStorage.deleteFriend(userId, friendId);
     }
 
@@ -83,6 +92,10 @@ public class UserService {
         return friends.stream()
                 .filter(otherFriends::contains)
                 .collect(Collectors.toList());
+    }
+
+    public List<Feed> getAllFeedsByUserId(int id) {
+        return feedDBStorage.getAllFeedsByUserId(id);
     }
 
     public List<Film> getFilmRecommendations(Integer userId) {

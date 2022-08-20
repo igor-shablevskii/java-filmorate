@@ -6,7 +6,6 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dao.UserDao;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.sql.Date;
@@ -28,7 +27,7 @@ public class UserDbStorage implements UserDao {
 
     @Override
     public User save(User user) {
-        String sql = "INSERT INTO users (user_name, user_login, user_email, user_birthday) values (?, ?, ?, ?);";
+        String sql = "INSERT INTO users (user_name, user_login, user_email, user_birthday) values (?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement stmt = connection.prepareStatement(sql, new String[]{"user_id"});
@@ -46,7 +45,7 @@ public class UserDbStorage implements UserDao {
     @Override
     public User update(User user) {
         String sqlQuery = "UPDATE users SET user_name = ?, user_login = ?, user_email = ?, user_birthday = ? " +
-                "WHERE user_id = ?;";
+                "WHERE user_id = ?";
         jdbcTemplate.update(sqlQuery
                 , user.getName()
                 , user.getLogin()
@@ -58,28 +57,34 @@ public class UserDbStorage implements UserDao {
 
     @Override
     public boolean delete(User user) {
-        String sqlQuery = "DELETE FROM users WHERE user_id = ?;";
+        String sqlQuery = "DELETE FROM users WHERE user_id = ?";
         return jdbcTemplate.update(sqlQuery, user.getId()) > 0;
     }
 
     @Override
     public List<User> getAllUsers() {
-        String sqlQuery = "SELECT user_id, user_name, user_login, user_email, user_birthday FROM users;";
+        String sqlQuery = "SELECT user_id, user_name, user_login, user_email, user_birthday FROM users";
         return jdbcTemplate.query(sqlQuery, this::mapRowToUser);
     }
 
     @Override
     public User getUserById(int userId) {
         String sqlQuery = "SELECT user_id, user_name, user_login, user_email, user_birthday " +
-                "FROM users WHERE user_id = ?;";
+                "FROM users WHERE user_id = ?";
         return jdbcTemplate.queryForObject(sqlQuery, this::mapRowToUser, userId);
     }
 
     @Override
     public boolean containsInStorage(int userId) {
-        String sqlQuery = "SELECT count(*) FROM users WHERE user_id = ?;";
+        String sqlQuery = "SELECT count(*) FROM users WHERE user_id = ?";
         int result = jdbcTemplate.queryForObject(sqlQuery, Integer.class, userId);
         return result == 1;
+    }
+
+    @Override
+    public void deleteUserById(int userId) {
+        String sql = "DELETE FROM users WHERE user_id = ?";
+        jdbcTemplate.update(sql, userId);
     }
 
     private User mapRowToUser(ResultSet resultSet, int rowNum) throws SQLException {
@@ -90,16 +95,5 @@ public class UserDbStorage implements UserDao {
                 .email(resultSet.getString("user_email"))
                 .birthday(resultSet.getDate("user_birthday").toLocalDate())
                 .build();
-    }
-
-    @Override
-    public void deleteUserById(int userId) {
-        // проверка наличия пользователя по id в БД, если не найден выбросить исключение
-        if (!containsInStorage(userId)) {
-            throw new NotFoundException("User with id " + userId + " not found");
-        }
-
-        String sql = String.format("DELETE FROM users WHERE user_id = '%s'", userId);
-        jdbcTemplate.update(sql);
     }
 }

@@ -11,39 +11,39 @@ import java.util.List;
 @Service
 public class DirectorService {
 
-    private final DirectorDao directorDbStorage;
+    private final DirectorDao directorDao;
 
     @Autowired
-    public DirectorService(DirectorDao directorDbStorage) {
-        this.directorDbStorage = directorDbStorage;
+    public DirectorService(DirectorDao directorDao) {
+        this.directorDao = directorDao;
     }
 
     public Director create(Director director) {
-        return directorDbStorage.create(director);
+        return directorDao.create(director);
     }
 
     public Director update(Director director) {
-        if (!directorDbStorage.containsInStorage(director.getId())) {
+        if (!directorDao.containsInStorage(director.getId())) {
             throw new NotFoundException("Director with id = " + director.getId() + " not found");
         }
-        return directorDbStorage.update(director);
+        return directorDao.update(director);
     }
 
     public List<Director> getAllDirectors() {
-        return directorDbStorage.getAllDirectors();
+        return directorDao.getAllDirectors();
     }
 
     public Director getDirectorById(int id) {
-        if (!directorDbStorage.containsInStorage(id)) {
+        if (!directorDao.containsInStorage(id)) {
             throw new NotFoundException("Director with id = " + id + " not found");
         }
-        return directorDbStorage.getDirectorById(id);
+        return directorDao.getDirectorById(id);
     }
 
     public void removeDirectorById(int id) {
-        if (!directorDbStorage.containsInStorage(id)) {
+        if (!directorDao.containsInStorage(id)) {
             throw new NotFoundException("Director with id = " + id + " not found");
         }
-        directorDbStorage.removeDirectorById(id);
+        directorDao.removeDirectorById(id);
     }
 }
