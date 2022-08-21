@@ -85,4 +85,26 @@ public interface FilmDao {
      */
     List<Film> getFilmRecommendations(Integer userId);
 
+    /**
+     * Получить список фильмов,
+     * отсортированных по популярности,
+     * содержащих в названии поисковый запрос
+     */
+    List<Film> searchByTitleOnly(String query);
+
+
+    /**
+     * Получить список фильмов,
+     * отсортированных по популярности,
+     * содержащих в поле режиссер поисковый запрос
+     */
+    List<Film> searchByDirectorOnly(String query);
+
+    /**
+     * Получить список фильмов,
+     * отсортированных по популярности,
+     * содержащих в названии или в поле режиссер поисковый запрос
+     */
+    List<Film> searchByTitleAndDirector(String query);
+
 }

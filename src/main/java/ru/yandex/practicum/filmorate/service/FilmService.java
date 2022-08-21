@@ -5,8 +5,11 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dao.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Feed;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -147,4 +150,30 @@ public class FilmService {
                 .peek(f -> f.getDirectors().addAll(directorDbStorage.loadDirectors(f.getId())))
                 .collect(Collectors.toList());
     }
+
+    public List<Film> search(String query, String by) {
+        final String TITLE = "title";
+        final String DIRECTOR = "director";
+
+        if (by == null || (!by.contains(TITLE) && !by.contains(DIRECTOR))) {
+            throw new ValidationException("There isn't type for search. Use by=director,title");
+        }
+        List<String> parameters = Arrays.asList(by.split(","));
+        List<Film> films = new ArrayList<>();
+        if (parameters.size() == 2 && parameters.contains(DIRECTOR) && parameters.contains(TITLE)) {
+            films.addAll(filmDbStorage.searchByTitleAndDirector(query));
+        } else if (parameters.size() == 1 && parameters.contains(DIRECTOR)) {
+            films.addAll(filmDbStorage.searchByDirectorOnly(query));
+        } else if (parameters.size() == 1 && parameters.contains(TITLE)) {
+            films.addAll(filmDbStorage.searchByTitleOnly(query));
+        } else {
+            throw new ValidationException("There isn't type for search. Use by=director,title");
+        }
+
+        return films.stream()
+                .peek(f -> f.getGenres().addAll(genreDbStorage.loadGenres(f.getId())))
+                .peek(f -> f.getDirectors().addAll(directorDbStorage.loadDirectors(f.getId())))
+                .collect(Collectors.toList());
+    }
+
 }
