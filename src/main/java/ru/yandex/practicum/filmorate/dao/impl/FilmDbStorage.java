@@ -233,22 +233,6 @@ public class FilmDbStorage implements FilmDao {
         jdbcTemplate.update(sql);
     }
 
-    private Film mapRowToFilm(ResultSet rs, int rowNum) throws SQLException {
-        return Film.builder()
-                .id(rs.getInt("film_id"))
-                .name(rs.getString("film_name"))
-                .description(rs.getString("film_description"))
-                .releaseDate(rs.getDate("film_releaseDate").toLocalDate())
-                .rate(rs.getInt("rate"))
-                .duration(rs.getInt("film_duration"))
-                .mpa(new Mpa(
-                        rs.getInt("mpa_id"),
-                        rs.getString("mpa_name")))
-                .genres(new LinkedHashSet<>())
-                .directors(new HashSet<>())
-                .build();
-    }
-
     @Override
     public List<Film> searchByTitleOnly(String query) {
         final String sql =
@@ -289,6 +273,22 @@ public class FilmDbStorage implements FilmDao {
                 "ORDER BY f.rate DESC";
         final String queryString = "%" + query + "%";
         return jdbcTemplate.query(sql, this::mapRowToFilm, queryString, queryString);
+    }
+
+    private Film mapRowToFilm(ResultSet rs, int rowNum) throws SQLException {
+        return Film.builder()
+                .id(rs.getInt("film_id"))
+                .name(rs.getString("film_name"))
+                .description(rs.getString("film_description"))
+                .releaseDate(rs.getDate("film_releaseDate").toLocalDate())
+                .rate(rs.getInt("rate"))
+                .duration(rs.getInt("film_duration"))
+                .mpa(new Mpa(
+                        rs.getInt("mpa_id"),
+                        rs.getString("mpa_name")))
+                .genres(new LinkedHashSet<>())
+                .directors(new HashSet<>())
+                .build();
     }
 
 }

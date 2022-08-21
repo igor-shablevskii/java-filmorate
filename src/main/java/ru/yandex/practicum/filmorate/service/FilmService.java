@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -153,20 +154,20 @@ public class FilmService {
     public List<Film> search(String query, String by) {
         final String TITLE = "title";
         final String DIRECTOR = "director";
-        List<Film> films = new ArrayList<>();
 
-        // если by == null или by не содержит ключевых слов:
         if (by == null || (!by.contains(TITLE) && !by.contains(DIRECTOR))) {
             throw new ValidationException("There isn't type for search. Use by=director,title");
-            // если by содержит оба ключевых слова:
-        } else if (by.contains(TITLE) && by.contains(DIRECTOR)) {
+        }
+        List<String> parameters = Arrays.asList(by.split(","));
+        List<Film> films = new ArrayList<>();
+        if (parameters.size() == 2 && parameters.contains(DIRECTOR) && parameters.contains(TITLE)) {
             films.addAll(filmDbStorage.searchByTitleAndDirector(query));
-            // если by содержит только слово title:
-        } else if (by.contains(TITLE)) {
-            films.addAll(filmDbStorage.searchByTitleOnly(query));
-            // если by содержит только слово director:
-        } else {
+        } else if (parameters.size() == 1 && parameters.contains(DIRECTOR)) {
             films.addAll(filmDbStorage.searchByDirectorOnly(query));
+        } else if (parameters.size() == 1 && parameters.contains(TITLE)) {
+            films.addAll(filmDbStorage.searchByTitleOnly(query));
+        } else {
+            throw new ValidationException("There isn't type for search. Use by=director,title");
         }
 
         return films.stream()
