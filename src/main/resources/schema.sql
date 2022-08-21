@@ -54,7 +54,6 @@ CREATE TABLE IF NOT EXISTS film_likes
 (
     film_id INTEGER REFERENCES films (film_id) ON DELETE CASCADE,
     user_id INTEGER REFERENCES users (user_id) ON DELETE CASCADE
-    --PRIMARY KEY (film_id, user_id)
 );
 
 CREATE TABLE IF NOT EXISTS friends

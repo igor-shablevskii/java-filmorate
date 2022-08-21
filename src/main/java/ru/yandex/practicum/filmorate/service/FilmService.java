@@ -4,9 +4,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dao.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.EventType;
 import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Operation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,87 +19,87 @@ import java.util.stream.Collectors;
 @Service
 public class FilmService {
 
-    private final FilmDao filmDbStorage;
-    private final UserDao userDbStorage;
-    private final GenreDao genreDbStorage;
-    private final LikeDao likeDbStorage;
-    private final DirectorDao directorDbStorage;
-    private final FeedDao feedDbStorage;
+    private final FilmDao filmDao;
+    private final UserDao userDao;
+    private final GenreDao genreDao;
+    private final LikeDao likeDao;
+    private final DirectorDao directorDao;
+    private final FeedDao feedDao;
 
     @Autowired
-    public FilmService(FilmDao filmDbStorage,
-                       UserDao userDbStorage,
-                       GenreDao genreDbStorage,
-                       LikeDao likeDbStorage,
-                       DirectorDao directorDbStorage,
-                       FeedDao feedDbStorage) {
-        this.filmDbStorage = filmDbStorage;
-        this.userDbStorage = userDbStorage;
-        this.genreDbStorage = genreDbStorage;
-        this.likeDbStorage = likeDbStorage;
-        this.directorDbStorage = directorDbStorage;
-        this.feedDbStorage = feedDbStorage;
+    public FilmService(FilmDao filmDao,
+                       UserDao userDao,
+                       GenreDao genreDao,
+                       LikeDao likeDao,
+                       DirectorDao directorDao,
+                       FeedDao feedDao) {
+        this.filmDao = filmDao;
+        this.userDao = userDao;
+        this.genreDao = genreDao;
+        this.likeDao = likeDao;
+        this.directorDao = directorDao;
+        this.feedDao = feedDao;
     }
 
     public Film create(Film film) {
-        Film savedFilm = filmDbStorage.save(film);
-        genreDbStorage.setGenre(savedFilm);
-        directorDbStorage.setDirector(savedFilm);
+        Film savedFilm = filmDao.save(film);
+        genreDao.setGenre(savedFilm);
+        directorDao.setDirector(savedFilm);
         return savedFilm;
     }
 
     public Film update(Film film) {
-        if (!filmDbStorage.containsInStorage(film.getId())) {
+        if (!filmDao.containsInStorage(film.getId())) {
             throw new NotFoundException("Film with id = " + film.getId() + " not found");
         }
-        Film updatedFilm = filmDbStorage.update(film);
-        genreDbStorage.setGenre(updatedFilm);
-        directorDbStorage.setDirector(updatedFilm);
+        Film updatedFilm = filmDao.update(film);
+        genreDao.setGenre(updatedFilm);
+        directorDao.setDirector(updatedFilm);
         System.out.println(updatedFilm.getRate());
         return updatedFilm;
     }
 
     public Film getFilmById(int filmId) {
-        if (!filmDbStorage.containsInStorage(filmId)) {
+        if (!filmDao.containsInStorage(filmId)) {
             throw new NotFoundException("Film with id = " + filmId + " not found");
         }
-        Film film = filmDbStorage.getFilmById(filmId);
-        film.getGenres().addAll(genreDbStorage.loadGenres(filmId));
-        film.getDirectors().addAll(directorDbStorage.loadDirectors(filmId));
+        Film film = filmDao.getFilmById(filmId);
+        film.getGenres().addAll(genreDao.loadGenres(filmId));
+        film.getDirectors().addAll(directorDao.loadDirectors(filmId));
         return film;
     }
 
     public List<Film> getAllFilms() {
-        return filmDbStorage.getAllFilms()
+        return filmDao.getAllFilms()
                 .stream()
-                .peek(f -> f.getGenres().addAll(genreDbStorage.loadGenres(f.getId())))
-                .peek(f -> f.getDirectors().addAll(directorDbStorage.loadDirectors(f.getId())))
+                .peek(f -> f.getGenres().addAll(genreDao.loadGenres(f.getId())))
+                .peek(f -> f.getDirectors().addAll(directorDao.loadDirectors(f.getId())))
                 .collect(Collectors.toList());
     }
 
     public void saveLike(int filmId, int userId) {
-        if (!filmDbStorage.containsInStorage(filmId)) {
+        if (!filmDao.containsInStorage(filmId)) {
             throw new NotFoundException("Film with id = " + filmId + " not found");
         }
-        if (!userDbStorage.containsInStorage(userId)) {
+        if (!userDao.containsInStorage(userId)) {
             throw new NotFoundException("User with id = " + userId + " not found");
         }
-        likeDbStorage.saveLike(filmId, userId);
-        feedDbStorage.create(new Feed(userId, "LIKE", "ADD", filmId));
+        likeDao.saveLike(filmId, userId);
+        feedDao.create(new Feed(userId, EventType.LIKE, Operation.ADD, filmId));
         Film film = getFilmById(filmId);
         film.setRate(film.getRate() + 1);
         update(film);
     }
 
     public void deleteLike(int filmId, int userId) {
-        if (!filmDbStorage.containsInStorage(filmId)) {
+        if (!filmDao.containsInStorage(filmId)) {
             throw new NotFoundException("Film with id = " + filmId + " not found");
         }
-        if (!userDbStorage.containsInStorage(userId)) {
+        if (!userDao.containsInStorage(userId)) {
             throw new NotFoundException("User with id = " + userId + " not found");
         }
-        likeDbStorage.deleteLike(filmId, userId);
-        feedDbStorage.create(new Feed(userId, "LIKE", "REMOVE", filmId));
+        likeDao.deleteLike(filmId, userId);
+        feedDao.create(new Feed(userId, EventType.LIKE, Operation.REMOVE, filmId));
         Film film = getFilmById(filmId);
         film.setRate(film.getRate() - 1);
         update(film);
@@ -106,48 +108,63 @@ public class FilmService {
     public List<Film> getPopularFilms(Integer count, Integer genreId, Integer yearId) {
         List<Film> popularFilms;
         if (genreId != null && yearId != null) {
-            popularFilms = filmDbStorage.getPopularFilmsByGenreAndYear(count, genreId, yearId);
+            popularFilms = filmDao.getPopularFilmsByGenreAndYear(count, genreId, yearId);
         } else if (genreId != null) {
-            popularFilms = filmDbStorage.getPopularFilmsByGenre(count, genreId);
+            popularFilms = filmDao.getPopularFilmsByGenre(count, genreId);
         } else if (yearId != null) {
-            popularFilms = filmDbStorage.getPopularFilmsByYear(count, yearId);
+            popularFilms = filmDao.getPopularFilmsByYear(count, yearId);
         } else {
-            popularFilms = filmDbStorage.getPopularFilms(count);
+            popularFilms = filmDao.getPopularFilms(count);
         }
         return popularFilms
                 .stream()
-                .peek(f -> f.getGenres().addAll(genreDbStorage.loadGenres(f.getId())))
-                .peek(f -> f.getDirectors().addAll(directorDbStorage.loadDirectors(f.getId())))
+                .peek(f -> f.getGenres().addAll(genreDao.loadGenres(f.getId())))
+                .peek(f -> f.getDirectors().addAll(directorDao.loadDirectors(f.getId())))
                 .sorted(Comparator.comparingInt(Film::getRate).reversed())
                 .collect(Collectors.toList());
     }
 
     public List<Film> getSortedFilmsByDirectors(int directorId, String sortBy) {
-        if (!directorDbStorage.containsInStorage(directorId)) {
+        if (!directorDao.containsInStorage(directorId)) {
             throw new NotFoundException("Director with id = " + directorId + " not found");
         }
         if (!sortBy.equals("year") && !sortBy.equals("likes")) {
             throw new RuntimeException("Sorting type not found");
         }
-        return filmDbStorage.getSortedFilmsByDirectors(directorId, sortBy)
-                .stream()
-                .peek(f -> f.getGenres().addAll(genreDbStorage.loadGenres(f.getId())))
-                .peek(f -> f.getDirectors().addAll(directorDbStorage.loadDirectors(f.getId())))
+        List<Film> filmList = filmDao.getSortedFilmsByDirectors(directorId, sortBy);
+        if (sortBy.equals("year")) {
+            return filmList.stream().sorted(Comparator.comparing(Film::getReleaseDate))
+                    .peek(f -> f.getGenres().addAll(genreDao.loadGenres(f.getId())))
+                    .peek(f -> f.getDirectors().addAll(directorDao.loadDirectors(f.getId())))
+                    .collect(Collectors.toList());
+        }
+        return filmList.stream()
+                .peek(f -> f.getGenres().addAll(genreDao.loadGenres(f.getId())))
+                .peek(f -> f.getDirectors().addAll(directorDao.loadDirectors(f.getId())))
                 .collect(Collectors.toList());
     }
 
     public List<Film> getUsersCommonFilms(int userId, int otherUserId) {
-        return filmDbStorage.getUsersCommonFilms(userId, otherUserId);
+        if (!userDao.containsInStorage(userId)) {
+            throw new NotFoundException("User with id = " + userId + " not found");
+        }
+        if (!userDao.containsInStorage(otherUserId)) {
+            throw new NotFoundException("User with id = " + otherUserId + " not found");
+        }
+        return filmDao.getUsersCommonFilms(userId, otherUserId);
     }
 
     public void deleteFilmById(int filmId) {
-        filmDbStorage.deleteFilmById(filmId);
+        if (!feedDao.containsInStorage(filmId)) {
+            throw new NotFoundException("Film with id " + filmId + " not found");
+        }
+        filmDao.deleteFilmById(filmId);
     }
 
     public List<Film> getFilmRecommendations(Integer userId) {
-        return filmDbStorage.getFilmRecommendations(userId).stream()
-                .peek(f -> f.getGenres().addAll(genreDbStorage.loadGenres(f.getId())))
-                .peek(f -> f.getDirectors().addAll(directorDbStorage.loadDirectors(f.getId())))
+        return filmDao.getFilmRecommendations(userId).stream()
+                .peek(f -> f.getGenres().addAll(genreDao.loadGenres(f.getId())))
+                .peek(f -> f.getDirectors().addAll(directorDao.loadDirectors(f.getId())))
                 .collect(Collectors.toList());
     }
 
@@ -161,19 +178,17 @@ public class FilmService {
         List<String> parameters = Arrays.asList(by.split(","));
         List<Film> films = new ArrayList<>();
         if (parameters.size() == 2 && parameters.contains(DIRECTOR) && parameters.contains(TITLE)) {
-            films.addAll(filmDbStorage.searchByTitleAndDirector(query));
+            films.addAll(filmDao.searchByTitleAndDirector(query));
         } else if (parameters.size() == 1 && parameters.contains(DIRECTOR)) {
-            films.addAll(filmDbStorage.searchByDirectorOnly(query));
+            films.addAll(filmDao.searchByDirectorOnly(query));
         } else if (parameters.size() == 1 && parameters.contains(TITLE)) {
-            films.addAll(filmDbStorage.searchByTitleOnly(query));
+            films.addAll(filmDao.searchByTitleOnly(query));
         } else {
             throw new ValidationException("There isn't type for search. Use by=director,title");
         }
-
         return films.stream()
-                .peek(f -> f.getGenres().addAll(genreDbStorage.loadGenres(f.getId())))
-                .peek(f -> f.getDirectors().addAll(directorDbStorage.loadDirectors(f.getId())))
+                .peek(f -> f.getGenres().addAll(genreDao.loadGenres(f.getId())))
+                .peek(f -> f.getDirectors().addAll(directorDao.loadDirectors(f.getId())))
                 .collect(Collectors.toList());
     }
-
 }
