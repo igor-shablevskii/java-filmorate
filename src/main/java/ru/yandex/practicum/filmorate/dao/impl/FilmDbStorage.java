@@ -6,7 +6,6 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dao.FilmDao;
-
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
@@ -51,8 +50,9 @@ public class FilmDbStorage implements FilmDao {
 
     @Override
     public Film update(Film film) {
-        String sql = "UPDATE films SET film_name = ?, film_description = ?, film_releasedate = ?," +
-                "film_duration = ?, rate = ?, mpa_id = ? WHERE film_id = ?";
+        String sql = "UPDATE films SET film_name = ?, film_description = ?," +
+                " film_releasedate = ?,film_duration = ?, rate = ?, mpa_id = ? " +
+                "WHERE film_id = ?";
         jdbcTemplate.update(sql,
                 film.getName(),
                 film.getDescription(),
@@ -153,7 +153,6 @@ public class FilmDbStorage implements FilmDao {
 
     @Override
     public List<Film> getFilmRecommendations(Integer userId) {
-
         String sql = "WITH film_id_recommend AS " +
                 "(SELECT film_id FROM film_likes WHERE user_id = " +
                 "(WITH likes_count AS (SELECT user_id, COUNT(film_id) AS l_count " +
@@ -179,16 +178,19 @@ public class FilmDbStorage implements FilmDao {
 
     @Override
     public List<Film> getUsersCommonFilms(int userId, int otherUserId) {
-
-        String sql = "WITH common_users_films AS (SELECT likes.film_id FROM film_likes AS likes " +
-                "WHERE likes.user_id = ? INTERSECT SELECT likes.film_id FROM film_likes AS likes " +
-                "WHERE likes.user_id = ?), top_films AS (SELECT films.* FROM films " +
-                "LEFT JOIN film_likes AS likes ON likes.film_id = films.film_id " +
-                "GROUP BY films.film_id ORDER BY COUNT(likes.film_id) DESC ) " +
-                "SELECT top_films.*, mpa.mpa_name FROM top_films " +
-                "LEFT JOIN mpa_ratings mpa ON top_films.mpa_id = mpa.mpa_id " +
-                "LEFT JOIN common_users_films ON common_users_films.film_id = top_films.film_id " +
-                "WHERE top_films.film_id IN (common_users_films.film_id)";
+        String sql = "WITH common_films AS " +
+                "(SELECT likes.film_id FROM film_likes AS likes " +
+                "WHERE likes.user_id = ? " +
+                "INTERSECT SELECT likes.film_id " +
+                "FROM film_likes AS likes " +
+                "WHERE likes.user_id = ?) " +
+                "SELECT *, " +
+                "mr.mpa_name " +
+                "FROM films f " +
+                "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
+                "LEFT JOIN common_films ON common_films.film_id = f.film_id " +
+                "WHERE f.film_id IN (common_films.film_id) "+
+                "ORDER BY rate";
 
         return jdbcTemplate.query(sql, this::mapRowToFilm, userId, otherUserId);
     }

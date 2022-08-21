@@ -42,5 +42,11 @@ public interface ReviewDao {
      */
     boolean containsInStorage(int reviewId);
 
+    /**
+     * Обновление параметра useful
+     * для отзывы
+     */
+    void updateUseful(Integer reviewId, Integer useful);
+
 }
 

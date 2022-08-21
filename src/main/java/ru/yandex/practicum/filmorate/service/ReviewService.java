@@ -95,6 +95,7 @@ public class ReviewService {
         isUserExists(userId);
         Review review = reviewDao.getReviewById(reviewId);
         review.setUseful(review.getUseful() + 1);
+        reviewDao.updateUseful(reviewId, review.getUseful());
         reactionDao.saveLike(reviewId, userId);
     }
 
@@ -103,6 +104,7 @@ public class ReviewService {
         isUserExists(userId);
         Review review = reviewDao.getReviewById(reviewId);
         review.setUseful(review.getUseful() - 1);
+        reviewDao.updateUseful(reviewId, review.getUseful());
         reactionDao.saveDislike(reviewId, userId);
     }
 
@@ -110,6 +112,7 @@ public class ReviewService {
         isReactionExists(reviewId, userId);
         reactionDao.deleteReaction(reviewId, userId);
         Review review = reviewDao.getReviewById(reviewId);
+        reviewDao.updateUseful(reviewId, review.getUseful());
         review.setUseful(review.getUseful() - 1);
     }
 
@@ -117,6 +120,7 @@ public class ReviewService {
         isReactionExists(reviewId, userId);
         reactionDao.deleteReaction(reviewId, userId);
         Review review = reviewDao.getReviewById(reviewId);
+        reviewDao.updateUseful(reviewId, review.getUseful());
         review.setUseful(review.getUseful() + 1);
     }
 
