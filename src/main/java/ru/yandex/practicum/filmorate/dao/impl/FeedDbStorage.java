@@ -5,7 +5,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dao.FeedDao;
+import ru.yandex.practicum.filmorate.model.EventType;
 import ru.yandex.practicum.filmorate.model.Feed;
+import ru.yandex.practicum.filmorate.model.Operation;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -36,8 +38,8 @@ public class FeedDbStorage implements FeedDao {
         jdbcTemplate.update(sql,
                 feed.getUserId(),
                 feed.getTimestamp(),
-                feed.getEventType(),
-                feed.getOperation(),
+                feed.getEventType().name(),
+                feed.getOperation().name(),
                 feed.getEntityId());
     }
 
@@ -53,8 +55,8 @@ public class FeedDbStorage implements FeedDao {
                 .eventId(rs.getInt("feed_id"))
                 .userId(rs.getInt("user_id"))
                 .timestamp(rs.getLong("feed_time"))
-                .eventType(rs.getString("event_type"))
-                .operation(rs.getString("operation"))
+                .eventType(EventType.valueOf(rs.getString("event_type")))
+                .operation(Operation.valueOf(rs.getString("operation")))
                 .entityId(rs.getInt("entity_id"))
                 .build();
     }

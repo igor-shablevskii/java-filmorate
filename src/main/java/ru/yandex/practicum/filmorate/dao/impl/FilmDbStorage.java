@@ -6,7 +6,6 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dao.FilmDao;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
@@ -23,12 +22,10 @@ import java.util.Objects;
 public class FilmDbStorage implements FilmDao {
 
     private final JdbcTemplate jdbcTemplate;
-    private final UserDbStorage userDbStorage;
 
     @Autowired
-    public FilmDbStorage(JdbcTemplate jdbcTemplate, UserDbStorage userDbStorage) {
+    public FilmDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
-        this.userDbStorage = userDbStorage;
     }
 
     @Override
@@ -53,8 +50,9 @@ public class FilmDbStorage implements FilmDao {
 
     @Override
     public Film update(Film film) {
-        String sql = "UPDATE films SET film_name = ?, film_description = ?, film_releasedate = ?," +
-                "film_duration = ?, rate = ?, mpa_id = ? WHERE film_id = ?";
+        String sql = "UPDATE films SET film_name = ?, film_description = ?," +
+                " film_releasedate = ?,film_duration = ?, rate = ?, mpa_id = ? " +
+                "WHERE film_id = ?";
         jdbcTemplate.update(sql,
                 film.getName(),
                 film.getDescription(),
@@ -88,27 +86,14 @@ public class FilmDbStorage implements FilmDao {
 
     @Override
     public List<Film> getSortedFilmsByDirectors(int directorId, String sortBy) {
-        List<Film> listFilm;
-        if (sortBy.equals("year")) {
-            String sql = "SELECT f.film_id, f.film_name, f.film_description, f.film_releasedate, " +
-                    "f.rate, f.film_duration, f.mpa_id, mr.mpa_name FROM films f " +
-                    "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
-                    "LEFT JOIN film_director fd ON f.film_id = fd.film_id " +
-                    "WHERE fd.director_id = ? " +
-                    "ORDER BY f.film_releasedate;";
-            listFilm = jdbcTemplate.query(sql, this::mapRowToFilm, directorId);
-        } else {
-            String sql = "SELECT f.film_id, f.film_name, f.film_description, f.film_releasedate, " +
-                    "f.rate, f.film_duration, f.mpa_id, mr.mpa_name FROM films f " +
-                    "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
-                    "LEFT JOIN film_likes fl ON f.film_id = fl.film_id " +
-                    "LEFT JOIN film_director fd ON f.FILM_ID = fd.FILM_ID " +
-                    "WHERE fd.director_id = ? " +
-                    "GROUP BY fd.film_id " +
-                    "ORDER BY count(DISTINCT fl.user_id) DESC;";
-            listFilm = jdbcTemplate.query(sql, this::mapRowToFilm, directorId);
-        }
-        return listFilm;
+        String sql = "SELECT f.*, mr.mpa_name FROM films f " +
+                "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
+                "LEFT JOIN film_likes fl ON f.film_id = fl.film_id " +
+                "LEFT JOIN film_director fd ON f.FILM_ID = fd.FILM_ID " +
+                "WHERE fd.director_id = ? " +
+                "GROUP BY fd.film_id " +
+                "ORDER BY count(DISTINCT fl.user_id) DESC";
+        return jdbcTemplate.query(sql, this::mapRowToFilm, directorId);
     }
 
     @Override
@@ -193,44 +178,27 @@ public class FilmDbStorage implements FilmDao {
 
     @Override
     public List<Film> getUsersCommonFilms(int userId, int otherUserId) {
-        String excIdMsg = "";
-        String sql;
+        String sql = "WITH common_films AS " +
+                "(SELECT likes.film_id FROM film_likes AS likes " +
+                "WHERE likes.user_id = ? " +
+                "INTERSECT SELECT likes.film_id " +
+                "FROM film_likes AS likes " +
+                "WHERE likes.user_id = ?) " +
+                "SELECT *, " +
+                "mr.mpa_name " +
+                "FROM films f " +
+                "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
+                "LEFT JOIN common_films ON common_films.film_id = f.film_id " +
+                "WHERE f.film_id IN (common_films.film_id) "+
+                "ORDER BY rate";
 
-        // проверка наличия пользователей по id в БД
-        if (!userDbStorage.containsInStorage(userId)) {
-            excIdMsg = " first id " + userId;
-        }
-        if (!userDbStorage.containsInStorage(otherUserId)) {
-            excIdMsg += " second id " + otherUserId;
-        }
-
-        // если хотя бы один пользователь не найден выбросить исключение
-        if (excIdMsg.length() > 0) {
-            throw new NotFoundException("User with" + excIdMsg + " not found");
-        }
-
-        sql = String.format("WITH common_users_films AS (SELECT likes.film_id FROM film_likes AS likes " +
-                "WHERE likes.user_id = %s INTERSECT SELECT likes.film_id FROM film_likes AS likes " +
-                "WHERE likes.user_id = %s), top_films AS (SELECT films.* FROM films " +
-                "LEFT JOIN film_likes AS likes ON likes.film_id = films.film_id " +
-                "GROUP BY films.film_id ORDER BY COUNT(likes.film_id) DESC ) " +
-                "SELECT top_films.*, mpa.mpa_name FROM top_films " +
-                "LEFT JOIN mpa_ratings mpa ON top_films.mpa_id = mpa.mpa_id " +
-                "LEFT JOIN common_users_films ON common_users_films.film_id = top_films.film_id " +
-                "WHERE top_films.film_id IN (common_users_films.film_id)", userId, otherUserId);
-
-        return jdbcTemplate.query(sql, this::mapRowToFilm);
+        return jdbcTemplate.query(sql, this::mapRowToFilm, userId, otherUserId);
     }
 
     @Override
     public void deleteFilmById(int filmId) {
-        // проверка наличия фильма по id в БД, если не найден выбросить исключение
-        if (!containsInStorage(filmId)) {
-            throw new NotFoundException("Film with id " + filmId + " not found");
-        }
-
-        String sql = String.format("DELETE FROM films WHERE film_id = '%s'", filmId);
-        jdbcTemplate.update(sql);
+        String sql = "DELETE FROM films WHERE film_id = ?";
+        jdbcTemplate.update(sql, filmId);
     }
 
     @Override
@@ -290,5 +258,4 @@ public class FilmDbStorage implements FilmDao {
                 .directors(new HashSet<>())
                 .build();
     }
-
 }

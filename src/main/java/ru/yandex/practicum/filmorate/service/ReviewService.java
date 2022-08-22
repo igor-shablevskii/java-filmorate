@@ -8,10 +8,7 @@ import ru.yandex.practicum.filmorate.dao.ReactionDao;
 import ru.yandex.practicum.filmorate.dao.UserDao;
 import ru.yandex.practicum.filmorate.dao.impl.ReviewDbStorage;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.model.Feed;
-import ru.yandex.practicum.filmorate.model.Reaction;
-import ru.yandex.practicum.filmorate.model.ReactionType;
-import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.model.*;
 
 import java.util.Comparator;
 import java.util.List;
@@ -45,7 +42,7 @@ public class ReviewService {
         isUserExists(review.getUserId());
         isFilmExists(review.getFilmId());
         Review savedReview = reviewDao.save(review);
-        Feed feed = new Feed(savedReview.getUserId(), "REVIEW", "ADD", review.getReviewId());
+        Feed feed = new Feed(savedReview.getUserId(), EventType.REVIEW, Operation.ADD, review.getReviewId());
         feedDao.create(feed);
         return savedReview;
     }
@@ -55,7 +52,7 @@ public class ReviewService {
         isFilmExists(review.getFilmId());
         isReviewExists(review.getReviewId());
         Review updatedReview = reviewDao.update(review);
-        Feed feed = new Feed(updatedReview.getUserId(), "REVIEW", "UPDATE", review.getReviewId());
+        Feed feed = new Feed(updatedReview.getUserId(), EventType.REVIEW, Operation.UPDATE, review.getReviewId());
         feedDao.create(feed);
         return updatedReview;
     }
@@ -88,7 +85,7 @@ public class ReviewService {
     public void deleteReview(int reviewId) {
         isReviewExists(reviewId);
         Review review = getReviewById(reviewId);
-        Feed feed = new Feed(review.getUserId(), "REVIEW", "REMOVE", reviewId);
+        Feed feed = new Feed(review.getUserId(), EventType.REVIEW, Operation.REMOVE, reviewId);
         feedDao.create(feed);
         reviewDao.deleteReview(reviewId);
     }
@@ -98,6 +95,7 @@ public class ReviewService {
         isUserExists(userId);
         Review review = reviewDao.getReviewById(reviewId);
         review.setUseful(review.getUseful() + 1);
+        reviewDao.updateUseful(reviewId, review.getUseful());
         reactionDao.saveLike(reviewId, userId);
     }
 
@@ -106,6 +104,7 @@ public class ReviewService {
         isUserExists(userId);
         Review review = reviewDao.getReviewById(reviewId);
         review.setUseful(review.getUseful() - 1);
+        reviewDao.updateUseful(reviewId, review.getUseful());
         reactionDao.saveDislike(reviewId, userId);
     }
 
@@ -113,6 +112,7 @@ public class ReviewService {
         isReactionExists(reviewId, userId);
         reactionDao.deleteReaction(reviewId, userId);
         Review review = reviewDao.getReviewById(reviewId);
+        reviewDao.updateUseful(reviewId, review.getUseful());
         review.setUseful(review.getUseful() - 1);
     }
 
@@ -120,6 +120,7 @@ public class ReviewService {
         isReactionExists(reviewId, userId);
         reactionDao.deleteReaction(reviewId, userId);
         Review review = reviewDao.getReviewById(reviewId);
+        reviewDao.updateUseful(reviewId, review.getUseful());
         review.setUseful(review.getUseful() + 1);
     }
 

@@ -6,9 +6,7 @@ import ru.yandex.practicum.filmorate.dao.FeedDao;
 import ru.yandex.practicum.filmorate.dao.FriendDao;
 import ru.yandex.practicum.filmorate.dao.UserDao;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.model.Feed;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,71 +14,71 @@ import java.util.stream.Collectors;
 @Service
 public class UserService {
 
-    private final UserDao userDbStorage;
-    private final FriendDao friendDbStorage;
-    private final FilmService filmService;
-    private final FeedDao feedDBStorage;
+    private final UserDao userDao;
+    private final FriendDao friendDao;
+    private final FilmService filmDao;
+    private final FeedDao feedDao;
 
     @Autowired
-    public UserService(UserDao userDbStorage,
-                       FriendDao friendDbStorage,
-                       FilmService filmService,
-                       FeedDao feedDBStorage) {
-        this.userDbStorage = userDbStorage;
-        this.friendDbStorage = friendDbStorage;
-        this.filmService = filmService;
-        this.feedDBStorage = feedDBStorage;
+    public UserService(UserDao userDao,
+                       FriendDao friendDao,
+                       FilmService filmDao,
+                       FeedDao feedDao) {
+        this.userDao = userDao;
+        this.friendDao = friendDao;
+        this.filmDao = filmDao;
+        this.feedDao = feedDao;
     }
 
     public User save(User user) {
-        return userDbStorage.save(user);
+        return userDao.save(user);
     }
 
     public User update(User user) {
-        if (!userDbStorage.containsInStorage(user.getId())) {
+        if (!userDao.containsInStorage(user.getId())) {
             throw new NotFoundException("User with id = " + user.getId() + " not found");
         }
-        return userDbStorage.update(user);
+        return userDao.update(user);
     }
 
     public User getUserById(int userId) {
-        if (!userDbStorage.containsInStorage(userId)) {
+        if (!userDao.containsInStorage(userId)) {
             throw new NotFoundException("User with id = " + userId + " not found");
         }
-        return userDbStorage.getUserById(userId);
+        return userDao.getUserById(userId);
     }
 
     public List<User> getAllUsers() {
-        return userDbStorage.getAllUsers();
+        return userDao.getAllUsers();
     }
 
     public void addFriend(int userId, int friendId) {
-        if (!userDbStorage.containsInStorage(userId)) {
+        if (!userDao.containsInStorage(userId)) {
             throw new NotFoundException("User with id = " + userId + " not found");
         }
-        if (!userDbStorage.containsInStorage(friendId)) {
+        if (!userDao.containsInStorage(friendId)) {
             throw new NotFoundException("User with id = " + friendId + " not found");
         }
-        feedDBStorage.create(new Feed(userId, "FRIEND", "ADD", friendId));
-        friendDbStorage.saveFriend(userId, friendId);
+        feedDao.create(new Feed(userId, EventType.FRIEND, Operation.ADD, friendId));
+        friendDao.saveFriend(userId, friendId);
     }
 
     public void deleteFriend(int userId, int friendId) {
-        if (!userDbStorage.containsInStorage(userId)) {
+        if (!userDao.containsInStorage(userId)) {
             throw new NotFoundException("User with id = " + userId + " not found");
         }
-        if (!userDbStorage.containsInStorage(friendId)) {
+        if (!userDao.containsInStorage(friendId)) {
             throw new NotFoundException("User with id = " + friendId + " not found");
         }
-        feedDBStorage.create(new Feed(userId, "FRIEND", "REMOVE", friendId));
-        friendDbStorage.deleteFriend(userId, friendId);
+        feedDao.create(new Feed(userId, EventType.FRIEND, Operation.REMOVE, friendId));
+        friendDao.deleteFriend(userId, friendId);
     }
 
     public List<User> getFriendsByUserId(int userId) {
-        if (!userDbStorage.containsInStorage(userId)) {
+        if (!userDao.containsInStorage(userId)) {
             throw new NotFoundException("User with id = " + userId + " not found");
         }
-        return friendDbStorage.getFriendsByUserId(userId)
+        return friendDao.getFriendsByUserId(userId)
                 .stream()
                 .map(this::getUserById)
                 .collect(Collectors.toList());
@@ -95,17 +93,20 @@ public class UserService {
     }
 
     public List<Feed> getAllFeedsByUserId(int id) {
-        return feedDBStorage.getAllFeedsByUserId(id);
+        return feedDao.getAllFeedsByUserId(id);
     }
 
     public List<Film> getFilmRecommendations(Integer userId) {
-        if (!userDbStorage.containsInStorage(userId)) {
+        if (!userDao.containsInStorage(userId)) {
             throw new NotFoundException("User with id = " + userId + " not found");
         }
-        return filmService.getFilmRecommendations(userId);
+        return filmDao.getFilmRecommendations(userId);
     }
 
     public void deleteUserById(int userId) {
-        userDbStorage.deleteUserById(userId);
+        if (!userDao.containsInStorage(userId)) {
+            throw new NotFoundException("User with id = " + userId + " not found");
+        }
+        userDao.deleteUserById(userId);
     }
 }

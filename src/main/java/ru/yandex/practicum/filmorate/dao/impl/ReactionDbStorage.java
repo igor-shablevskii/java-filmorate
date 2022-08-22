@@ -22,31 +22,36 @@ public class ReactionDbStorage implements ReactionDao {
 
     @Override
     public List<Reaction> getReactions(Integer reviewId) {
-        String sql = "SELECT * FROM reviews_reactions WHERE review_id = ?";
+        String sql = "SELECT * FROM reviews_reactions " +
+                     "WHERE review_id = ?";
         return jdbcTemplate.query(sql, this::mapRowToReactionOnReview, reviewId);
     }
 
     @Override
     public void saveLike(int reviewId, int userId) {
-        String sql = "INSERT INTO reviews_reactions (review_id, user_id, reaction_type) values (?, ?, ?)";
-        jdbcTemplate.update(sql, reviewId, userId, "LIKE");
+        String sql = "INSERT INTO reviews_reactions " +
+                     "(review_id, user_id, reaction_type) VALUES (?, ?, ?)";
+        jdbcTemplate.update(sql, reviewId, userId, ReactionType.LIKE.name());
     }
 
     @Override
     public void saveDislike(int reviewId, int userId) {
-        String sql = "INSERT INTO reviews_reactions (review_id, user_id, reaction_type) values (?, ?, ?)";
-        jdbcTemplate.update(sql, reviewId, userId, "DISLIKE");
+        String sql = "INSERT INTO reviews_reactions " +
+                     "(review_id, user_id, reaction_type) VALUES (?, ?, ?)";
+        jdbcTemplate.update(sql, reviewId, userId, ReactionType.DISLIKE.name());
     }
 
     @Override
     public void deleteReaction(int reviewId, int userId) {
-        String sql = "DELETE from reviews_reactions where review_id=? AND user_id = ?";
+        String sql = "DELETE from reviews_reactions " +
+                     "WHERE review_id=? AND user_id = ?";
         jdbcTemplate.update(sql, reviewId, userId);
     }
 
     @Override
     public boolean containsReactionInStorage(int reviewId, int userId) {
-        String sqlQuery = "SELECT count(*) FROM reviews_reactions WHERE review_id = ? AND user_id = ?";
+        String sqlQuery = "SELECT count(*) FROM reviews_reactions " +
+                          "WHERE review_id = ? AND user_id = ?";
         int result = jdbcTemplate.queryForObject(sqlQuery, Integer.class, reviewId, userId);
         return result == 1;
     }
