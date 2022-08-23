@@ -37,7 +37,7 @@ public class UserDbStorage implements UserDao {
             stmt.setDate(4, Date.valueOf(user.getBirthday()));
             return stmt;
         }, keyHolder);
-        Integer userId = Objects.requireNonNull(keyHolder.getKey()).intValue();
+        Long userId = Objects.requireNonNull(keyHolder.getKey()).longValue();
         user.setId(userId);
         return user;
     }
@@ -68,28 +68,28 @@ public class UserDbStorage implements UserDao {
     }
 
     @Override
-    public User getUserById(int userId) {
+    public User getUserById(Long userId) {
         String sqlQuery = "SELECT user_id, user_name, user_login, user_email, user_birthday " +
                 "FROM users WHERE user_id = ?";
         return jdbcTemplate.queryForObject(sqlQuery, this::mapRowToUser, userId);
     }
 
     @Override
-    public boolean containsInStorage(int userId) {
+    public boolean containsInStorage(Long userId) {
         String sqlQuery = "SELECT count(*) FROM users WHERE user_id = ?";
         int result = jdbcTemplate.queryForObject(sqlQuery, Integer.class, userId);
         return result == 1;
     }
 
     @Override
-    public void deleteUserById(int userId) {
+    public void deleteUserById(Long userId) {
         String sql = "DELETE FROM users WHERE user_id = ?";
         jdbcTemplate.update(sql, userId);
     }
 
     private User mapRowToUser(ResultSet resultSet, int rowNum) throws SQLException {
         return User.builder()
-                .id(resultSet.getInt("user_id"))
+                .id(resultSet.getLong("user_id"))
                 .name(resultSet.getString("user_name"))
                 .login(resultSet.getString("user_login"))
                 .email(resultSet.getString("user_email"))

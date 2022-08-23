@@ -56,7 +56,7 @@ public class ReviewService {
         return updatedReview;
     }
 
-    public List<Review> getReviews(Integer count, Integer filmId) {
+    public List<Review> getReviews(Integer count, Long filmId) {
         List<Review> reviews;
         if (filmId != null) {
             isFilmExists(filmId);
@@ -71,7 +71,7 @@ public class ReviewService {
                 .collect(Collectors.toList());
     }
 
-    public Review getReviewById(int reviewId) {
+    public Review getReviewById(Long reviewId) {
         isReviewExists(reviewId);
         Review review = reviewDao.getReviewById(reviewId);
         List<Reaction> reactions = reactionDao.getReactions(reviewId);
@@ -79,7 +79,7 @@ public class ReviewService {
         return review;
     }
 
-    public void deleteReview(int reviewId) {
+    public void deleteReview(Long reviewId) {
         isReviewExists(reviewId);
         Review review = getReviewById(reviewId);
         Feed feed = new Feed(review.getUserId(), EventType.REVIEW, Operation.REMOVE, reviewId);
@@ -87,47 +87,47 @@ public class ReviewService {
         reviewDao.deleteReview(reviewId);
     }
 
-    public void saveLike(int reviewId, int userId) {
+    public void saveLike(Long reviewId, Long userId) {
         isReviewExists(reviewId);
         isUserExists(userId);
         reactionDao.saveLike(reviewId, userId);
     }
 
-    public void saveDislike(int reviewId, int userId) {
+    public void saveDislike(Long reviewId, Long userId) {
         isReviewExists(reviewId);
         isUserExists(userId);
         reactionDao.saveDislike(reviewId, userId);
     }
 
-    public void deleteLike(int reviewId, int userId) {
+    public void deleteLike(Long reviewId, Long userId) {
         isReactionExists(reviewId, userId);
         reactionDao.deleteReaction(reviewId, userId);
     }
 
-    public void deleteDislike(int reviewId, int userId) {
+    public void deleteDislike(Long reviewId, Long userId) {
         isReactionExists(reviewId, userId);
         reactionDao.deleteReaction(reviewId, userId);
     }
 
-    private void isUserExists(Integer userId) {
+    private void isUserExists(Long userId) {
         if (!userDao.containsInStorage(userId)) {
             throw new NotFoundException(String.format("User with id = %d not found", userId));
         }
     }
 
-    private void isFilmExists(Integer filmId) {
+    private void isFilmExists(Long filmId) {
         if (!filmDao.containsInStorage(filmId)) {
             throw new NotFoundException(String.format("Film with id = %d not found", filmId));
         }
     }
 
-    private void isReviewExists(Integer reviewId) {
+    private void isReviewExists(Long reviewId) {
         if (!reviewDao.containsInStorage(reviewId)) {
             throw new NotFoundException(String.format("Review with id = %d not found", reviewId));
         }
     }
 
-    private void isReactionExists(Integer reviewId, Integer userId) {
+    private void isReactionExists(Long reviewId, Long userId) {
         if (!reactionDao.containsReactionInStorage(reviewId, userId)) {
             throw new NotFoundException("Reaction on review not found");
         }

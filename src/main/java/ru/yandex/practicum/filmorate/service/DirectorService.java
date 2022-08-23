@@ -31,17 +31,17 @@ public class DirectorService {
         return directorDao.getAllDirectors();
     }
 
-    public Director getDirectorById(int id) {
+    public Director getDirectorById(Long id) {
         isDirectorExists(id);
         return directorDao.getDirectorById(id);
     }
 
-    public void removeDirectorById(int id) {
+    public void removeDirectorById(Long id) {
         isDirectorExists(id);
         directorDao.removeDirectorById(id);
     }
 
-    private void isDirectorExists(Integer id) {
+    private void isDirectorExists(Long id) {
         if (!directorDao.containsInStorage(id)) {
             throw new NotFoundException(String.format("Director with id = %d not found", id));
         }

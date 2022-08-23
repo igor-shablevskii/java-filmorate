@@ -4,16 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dao.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.model.EventType;
-import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Operation;
+import ru.yandex.practicum.filmorate.model.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -56,7 +50,7 @@ public class FilmService {
         return updatedFilm;
     }
 
-    public Film getFilmById(int filmId) {
+    public Film getFilmById(Long filmId) {
         isFilmExists(filmId);
         Film film = filmDao.getFilmById(filmId);
         film.getGenres().addAll(genreDao.loadGenres(filmId));
@@ -65,21 +59,21 @@ public class FilmService {
     }
 
     public List<Film> getAllFilms() {
-        return filmDao.getAllFilms()
-                .stream()
-                .peek(f -> f.getGenres().addAll(genreDao.loadGenres(f.getId())))
-                .peek(f -> f.getDirectors().addAll(directorDao.loadDirectors(f.getId())))
-                .collect(Collectors.toList());
+        List<Film> films = filmDao.getAllFilms();
+        return addGenresAndDirectors(films);
     }
 
-    public void saveLike(int filmId, int userId) {
+    public void saveLike(Long filmId, Long userId) {
         isFilmExists(filmId);
         isUserExists(userId);
-        likeDao.saveLike(filmId, userId);
         feedDao.create(new Feed(userId, EventType.LIKE, Operation.ADD, filmId));
+        if (likeDao.containsInStorage(filmId, userId)) {
+            return;
+        }
+        likeDao.saveLike(filmId, userId);
     }
 
-    public void deleteLike(int filmId, int userId) {
+    public void deleteLike(Long filmId, Long userId) {
         isFilmExists(filmId);
         isUserExists(userId);
         likeDao.deleteLike(filmId, userId);
@@ -97,89 +91,78 @@ public class FilmService {
         } else {
             popularFilms = filmDao.getPopularFilms(count);
         }
-        return popularFilms
+        return addGenresAndDirectors(popularFilms)
                 .stream()
-                .peek(f -> f.getGenres().addAll(genreDao.loadGenres(f.getId())))
-                .peek(f -> f.getDirectors().addAll(directorDao.loadDirectors(f.getId())))
                 .sorted(Comparator.comparingInt(Film::getRate).reversed())
                 .collect(Collectors.toList());
     }
 
-    public List<Film> getSortedFilmsByDirectors(int directorId, String sortBy) {
+    public List<Film> getSortedFilmsByDirectors(Long directorId, FilmSortBy sortBy) {
         isDirectorExists(directorId);
-        if (!sortBy.equals("year") && !sortBy.equals("likes")) {
-            throw new RuntimeException("Sorting type not found");
-        }
-        List<Film> filmList = filmDao.getSortedFilmsByDirectors(directorId, sortBy);
-        if (sortBy.equals("year")) {
-            return filmList.stream().sorted(Comparator.comparing(Film::getReleaseDate))
-                    .peek(f -> f.getGenres().addAll(genreDao.loadGenres(f.getId())))
-                    .peek(f -> f.getDirectors().addAll(directorDao.loadDirectors(f.getId())))
+        List<Film> films = filmDao.getSortedFilmsByDirectors(directorId);
+        if (sortBy.equals(FilmSortBy.YEAR)) {
+            return addGenresAndDirectors(films)
+                    .stream()
+                    .sorted(Comparator.comparing(Film::getReleaseDate))
                     .collect(Collectors.toList());
         }
-        return filmList.stream()
-                .peek(f -> f.getGenres().addAll(genreDao.loadGenres(f.getId())))
-                .peek(f -> f.getDirectors().addAll(directorDao.loadDirectors(f.getId())))
-                .collect(Collectors.toList());
+        return addGenresAndDirectors(films);
     }
 
-    public List<Film> getUsersCommonFilms(int userId, int otherUserId) {
+    public List<Film> getUsersCommonFilms(Long userId, Long otherUserId) {
         isUserExists(userId);
         isUserExists(otherUserId);
         return filmDao.getUsersCommonFilms(userId, otherUserId);
     }
 
-    public void deleteFilmById(int filmId) {
+    public void deleteFilmById(Long filmId) {
         isFilmExists(filmId);
         filmDao.deleteFilmById(filmId);
     }
 
-    public List<Film> getFilmRecommendations(Integer userId) {
-        return filmDao.getFilmRecommendations(userId).stream()
-                .peek(f -> f.getGenres().addAll(genreDao.loadGenres(f.getId())))
-                .peek(f -> f.getDirectors().addAll(directorDao.loadDirectors(f.getId())))
-                .collect(Collectors.toList());
+    public List<Film> getFilmRecommendations(Long userId) {
+        List<Film> films = filmDao.getFilmRecommendations(userId);
+        return addGenresAndDirectors(films);
     }
 
     public List<Film> search(String query, String by) {
-        final String TITLE = "title";
-        final String DIRECTOR = "director";
-
-        if (by == null || (!by.contains(TITLE) && !by.contains(DIRECTOR))) {
-            throw new ValidationException("There isn't type for search. Use by=director,title");
-        }
-        List<String> parameters = Arrays.asList(by.split(","));
         List<Film> films = new ArrayList<>();
-        if (parameters.size() == 2 && parameters.contains(DIRECTOR) && parameters.contains(TITLE)) {
+        Set<FilmSearchBy> setParameters = Arrays.stream(by.split(","))
+                .map(String::toUpperCase)
+                .map(FilmSearchBy::valueOf)
+                .collect(Collectors.toSet());
+        if (setParameters.contains(FilmSearchBy.TITLE) && setParameters.contains(FilmSearchBy.DIRECTOR)) {
             films.addAll(filmDao.searchByTitleAndDirector(query));
-        } else if (parameters.size() == 1 && parameters.contains(DIRECTOR)) {
-            films.addAll(filmDao.searchByDirectorOnly(query));
-        } else if (parameters.size() == 1 && parameters.contains(TITLE)) {
+        } else if (setParameters.contains(FilmSearchBy.TITLE)) {
             films.addAll(filmDao.searchByTitleOnly(query));
         } else {
-            throw new ValidationException("There isn't type for search. Use by=director,title");
+            films.addAll(filmDao.searchByDirectorOnly(query));
         }
-        return films.stream()
-                .peek(f -> f.getGenres().addAll(genreDao.loadGenres(f.getId())))
-                .peek(f -> f.getDirectors().addAll(directorDao.loadDirectors(f.getId())))
-                .collect(Collectors.toList());
+        return addGenresAndDirectors(films);
     }
 
-    private void isFilmExists(Integer filmId) {
+    private void isFilmExists(Long filmId) {
         if (!filmDao.containsInStorage(filmId)) {
             throw new NotFoundException(String.format("Film with id = %d not found", filmId));
         }
     }
 
-    private void isUserExists(Integer userId) {
+    private void isUserExists(Long userId) {
         if (!userDao.containsInStorage(userId)) {
             throw new NotFoundException(String.format("User with id = %d not found", userId));
         }
     }
 
-    private void isDirectorExists(Integer directorId) {
+    private void isDirectorExists(Long directorId) {
         if (!directorDao.containsInStorage(directorId)) {
             throw new NotFoundException(String.format("Director with id = %d not found", directorId));
         }
+    }
+
+    private List<Film> addGenresAndDirectors(List<Film> films) {
+        return films.stream()
+                .peek(f -> f.getGenres().addAll(genreDao.loadGenres(f.getId())))
+                .peek(f -> f.getDirectors().addAll(directorDao.loadDirectors(f.getId())))
+                .collect(Collectors.toList());
     }
 }

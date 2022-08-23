@@ -10,5 +10,5 @@ import lombok.*;
 @Builder
 public class Reaction {
     private ReactionType reaction;
-    private Integer userId;
+    private Long userId;
 }

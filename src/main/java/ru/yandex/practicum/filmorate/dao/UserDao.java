@@ -24,7 +24,7 @@ public interface UserDao {
     /**
      * Проверка наличия пользователя в БД
      */
-    boolean containsInStorage(int userId);
+    boolean containsInStorage(Long userId);
 
     /**
      * Получить всех пользователей
@@ -34,10 +34,10 @@ public interface UserDao {
     /**
      * Получить пользователя по id
      */
-    User getUserById(int userId);
+    User getUserById(Long userId);
 
     /**
      * Удалить пользователя по id
      */
-    void deleteUserById(int userId);
+    void deleteUserById(Long userId);
 }

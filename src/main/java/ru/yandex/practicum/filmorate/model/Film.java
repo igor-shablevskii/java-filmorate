@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
-
 import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -21,7 +20,8 @@ import java.util.Set;
 @EqualsAndHashCode(of = "id")
 @Builder
 public class Film {
-    private Integer id;
+    @NotNull(groups = {Update.class})
+    private Long id;
     @NotBlank
     private String name;
     @Size(max = 200)

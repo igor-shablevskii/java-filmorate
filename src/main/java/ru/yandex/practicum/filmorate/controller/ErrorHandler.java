@@ -16,20 +16,20 @@ public class ErrorHandler {
 
     @ExceptionHandler
     public ResponseEntity<String> handleValidationException(final ValidationException e) {
-        log.info("400 {}", e.getMessage(),e);
+        log.info("400 {}", e.getMessage(), e);
         return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
     public ResponseEntity<String> handleNotFoundException(final NotFoundException e) {
-        log.info("404 {}", e.getMessage(),e);
+        log.info("404 {}", e.getMessage(), e);
         return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler
-    public ResponseEntity<String> handleConstraintViolationException(final ConstraintViolationException e){
-        log.info("404 {}", e.getMessage(),e);
-        return new ResponseEntity< >(e.getMessage(), HttpStatus.BAD_REQUEST);
+    public ResponseEntity<String> handleConstraintViolationException(final ConstraintViolationException e) {
+        log.info("404 {}", e.getMessage(), e);
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler

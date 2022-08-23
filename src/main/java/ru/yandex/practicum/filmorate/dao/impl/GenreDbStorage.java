@@ -24,40 +24,40 @@ public class GenreDbStorage implements GenreDao {
 
     @Override
     public void setGenre(Film film) {
-        String delSql = "DELETE FROM film_genre WHERE film_id = ?;";
+        String delSql = "DELETE FROM film_genre WHERE film_id = ?";
         jdbcTemplate.update(delSql, film.getId());
 
         Set<Genre> genres = film.getGenres();
         if (genres.size() != 0) {
             for (Genre genre : genres) {
-                String addSql = "INSERT INTO film_genre(film_id, genre_id) VALUES (?, ?);";
+                String addSql = "INSERT INTO film_genre(film_id, genre_id) VALUES (?, ?)";
                 jdbcTemplate.update(addSql, film.getId(), genre.getId());
             }
         }
     }
 
     @Override
-    public List<Genre> loadGenres(int id) {
+    public List<Genre> loadGenres(Long id) {
         String sql = "SELECT g.genre_id, g.genre_name FROM film_genre fg " +
-                "LEFT JOIN genres g ON g.genre_id = fg.genre_id WHERE fg.film_id = ? ORDER BY g.genre_id;"; //TODO?
+                "LEFT JOIN genres g ON g.genre_id = fg.genre_id WHERE fg.film_id = ? ORDER BY g.genre_id";
         return jdbcTemplate.query(sql, this::mapRowToGenre, id);
     }
 
     @Override
     public List<Genre> getAllGenres() {
-        String sql = "SELECT * FROM genres ORDER BY genre_id;";
+        String sql = "SELECT * FROM genres ORDER BY genre_id";
         return jdbcTemplate.query(sql, this::mapRowToGenre);
     }
 
     @Override
-    public Genre getGenreById(int id) {
-        String sql = "SELECT * FROM genres WHERE genre_id = ?;";
+    public Genre getGenreById(Integer id) {
+        String sql = "SELECT * FROM genres WHERE genre_id = ?";
         return jdbcTemplate.queryForObject(sql, this::mapRowToGenre, id);
     }
 
     @Override
-    public boolean containsInStorage(int id) {
-        String sqlQuery = "SELECT count(*) FROM genres WHERE genre_id = ?;";
+    public boolean containsInStorage(Integer id) {
+        String sqlQuery = "SELECT count(*) FROM genres WHERE genre_id = ?";
         int result = jdbcTemplate.queryForObject(sqlQuery, Integer.class, id);
         return result == 1;
     }

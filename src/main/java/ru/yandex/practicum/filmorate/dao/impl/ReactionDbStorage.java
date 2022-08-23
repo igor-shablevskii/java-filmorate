@@ -21,14 +21,14 @@ public class ReactionDbStorage implements ReactionDao {
     }
 
     @Override
-    public List<Reaction> getReactions(Integer reviewId) {
+    public List<Reaction> getReactions(Long reviewId) {
         String sql = "SELECT * FROM reviews_reactions " +
                      "WHERE review_id = ?";
         return jdbcTemplate.query(sql, this::mapRowToReactionOnReview, reviewId);
     }
 
     @Override
-    public void saveLike(int reviewId, int userId) {
+    public void saveLike(Long reviewId, Long userId) {
         String sql = "INSERT INTO reviews_reactions " +
                      "(review_id, user_id, reaction_type) VALUES (?, ?, ?)";
         jdbcTemplate.update(sql, reviewId, userId, ReactionType.LIKE.name());
@@ -36,7 +36,7 @@ public class ReactionDbStorage implements ReactionDao {
     }
 
     @Override
-    public void saveDislike(int reviewId, int userId) {
+    public void saveDislike(Long reviewId, Long userId) {
         String sql = "INSERT INTO reviews_reactions " +
                      "(review_id, user_id, reaction_type) VALUES (?, ?, ?)";
         jdbcTemplate.update(sql, reviewId, userId, ReactionType.DISLIKE.name());
@@ -44,7 +44,7 @@ public class ReactionDbStorage implements ReactionDao {
     }
 
     @Override
-    public void deleteReaction(int reviewId, int userId) {
+    public void deleteReaction(Long reviewId, Long userId) {
         String sql = "DELETE from reviews_reactions " +
                      "WHERE review_id=? AND user_id = ?";
         jdbcTemplate.update(sql, reviewId, userId);
@@ -52,14 +52,14 @@ public class ReactionDbStorage implements ReactionDao {
     }
 
     @Override
-    public boolean containsReactionInStorage(int reviewId, int userId) {
+    public boolean containsReactionInStorage(Long reviewId, Long userId) {
         String sqlQuery = "SELECT count(*) FROM reviews_reactions " +
                           "WHERE review_id = ? AND user_id = ?";
         int result = jdbcTemplate.queryForObject(sqlQuery, Integer.class, reviewId, userId);
         return result == 1;
     }
 
-    private void updateUseful(long reviewId) {
+    private void updateUseful(Long reviewId) {
         String sqlQuery = "UPDATE reviews r " +
                 "SET useful = (SELECT " +
                 "(SELECT count(rr.review_id) " +
@@ -78,7 +78,7 @@ public class ReactionDbStorage implements ReactionDao {
             throws SQLException {
         return Reaction.builder()
                 .reaction(ReactionType.valueOf(rs.getString("reaction_type")))
-                .userId(rs.getInt("user_id"))
+                .userId(rs.getLong("user_id"))
                 .build();
     }
 }

@@ -13,10 +13,7 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Repository
 public class FilmDbStorage implements FilmDao {
@@ -43,7 +40,7 @@ public class FilmDbStorage implements FilmDao {
             stmt.setInt(6, film.getMpa().getId());
             return stmt;
         }, keyHolder);
-        int filmId = Objects.requireNonNull(keyHolder.getKey()).intValue();
+        Long filmId = Objects.requireNonNull(keyHolder.getKey()).longValue();
         film.setId(filmId);
         return film;
     }
@@ -71,21 +68,21 @@ public class FilmDbStorage implements FilmDao {
     }
 
     @Override
-    public Film getFilmById(int filmId) {
+    public Film getFilmById(Long filmId) {
         String sql = "SELECT * FROM films f left JOIN mpa_ratings m ON F.mpa_id = m.mpa_id " +
                 "WHERE f.film_id = ?";
         return jdbcTemplate.queryForObject(sql, this::mapRowToFilm, filmId);
     }
 
     @Override
-    public boolean containsInStorage(int filmId) {
+    public boolean containsInStorage(Long filmId) {
         String sqlQuery = "SELECT count(*) FROM films WHERE film_id = ?";
         int result = jdbcTemplate.queryForObject(sqlQuery, Integer.class, filmId);
         return result == 1;
     }
 
     @Override
-    public List<Film> getSortedFilmsByDirectors(int directorId, String sortBy) {
+    public List<Film> getSortedFilmsByDirectors(Long directorId) {
         String sql = "SELECT f.*, mr.mpa_name FROM films f " +
                 "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
                 "LEFT JOIN film_likes fl ON f.film_id = fl.film_id " +
@@ -152,7 +149,7 @@ public class FilmDbStorage implements FilmDao {
     }
 
     @Override
-    public List<Film> getFilmRecommendations(Integer userId) {
+    public List<Film> getFilmRecommendations(Long userId) {
         String sql = "WITH film_id_recommend AS " +
                 "(SELECT film_id FROM film_likes WHERE user_id = " +
                 "(WITH likes_count AS (SELECT user_id, COUNT(film_id) AS l_count " +
@@ -177,7 +174,7 @@ public class FilmDbStorage implements FilmDao {
     }
 
     @Override
-    public List<Film> getUsersCommonFilms(int userId, int otherUserId) {
+    public List<Film> getUsersCommonFilms(Long userId, Long otherUserId) {
         String sql = "WITH common_films AS " +
                 "(SELECT likes.film_id FROM film_likes AS likes " +
                 "WHERE likes.user_id = ? " +
@@ -196,7 +193,7 @@ public class FilmDbStorage implements FilmDao {
     }
 
     @Override
-    public void deleteFilmById(int filmId) {
+    public void deleteFilmById(Long filmId) {
         String sql = "DELETE FROM films WHERE film_id = ?";
         jdbcTemplate.update(sql, filmId);
     }
@@ -245,7 +242,7 @@ public class FilmDbStorage implements FilmDao {
 
     private Film mapRowToFilm(ResultSet rs, int rowNum) throws SQLException {
         return Film.builder()
-                .id(rs.getInt("film_id"))
+                .id(rs.getLong("film_id"))
                 .name(rs.getString("film_name"))
                 .description(rs.getString("film_description"))
                 .releaseDate(rs.getDate("film_releaseDate").toLocalDate())

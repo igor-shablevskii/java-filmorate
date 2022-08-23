@@ -26,8 +26,8 @@ public class FeedDbStorage implements FeedDao {
     }
 
     @Override
-    public List<Feed> getAllFeedsByUserId(int id) {
-        String sql = "SELECT * FROM feeds WHERE user_id = ?";
+    public List<Feed> getAllFeedsByUserId(Long id) {
+        String sql = "SELECT * FROM feeds WHERE user_id = ? ORDER BY feed_id";
         return jdbcTemplate.query(sql, this::mapRowToFeed, id);
     }
 
@@ -44,7 +44,7 @@ public class FeedDbStorage implements FeedDao {
     }
 
     @Override
-    public boolean containsInStorage(int id) {
+    public boolean containsInStorage(Long id) {
         String sqlQuery = "SELECT count(*) FROM feeds WHERE feed_id = ?";
         int result = jdbcTemplate.queryForObject(sqlQuery, Integer.class, id);
         return result == 1;
@@ -52,12 +52,12 @@ public class FeedDbStorage implements FeedDao {
 
     private Feed mapRowToFeed(ResultSet rs, int rowNum) throws SQLException {
         return Feed.builder()
-                .eventId(rs.getInt("feed_id"))
-                .userId(rs.getInt("user_id"))
+                .eventId(rs.getLong("feed_id"))
+                .userId(rs.getLong("user_id"))
                 .timestamp(rs.getLong("feed_time"))
                 .eventType(EventType.valueOf(rs.getString("event_type")))
                 .operation(Operation.valueOf(rs.getString("operation")))
-                .entityId(rs.getInt("entity_id"))
+                .entityId(rs.getLong("entity_id"))
                 .build();
     }
 }

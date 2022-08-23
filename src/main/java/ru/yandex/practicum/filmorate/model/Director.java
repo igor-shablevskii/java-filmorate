@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.model;
 import lombok.*;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 @Getter
 @Setter
@@ -12,7 +13,8 @@ import javax.validation.constraints.NotBlank;
 @EqualsAndHashCode(of = "id")
 @Builder
 public class Director {
-    private Integer id;
+    @NotNull(groups = {Update.class})
+    private Long id;
     @NotBlank
     private String name;
 }
