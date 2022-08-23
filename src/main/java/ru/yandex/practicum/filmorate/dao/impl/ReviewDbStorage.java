@@ -57,12 +57,6 @@ public class ReviewDbStorage implements ReviewDao {
     }
 
     @Override
-    public void updateUseful(Integer reviewId, Integer useful) {
-        String sql = "UPDATE reviews SET useful = ? WHERE review_id = ?";
-        jdbcTemplate.update(sql, useful, reviewId);
-    }
-
-    @Override
     public List<Review> getReviewsByFilmId(Integer count, Integer filmId) {
         String sql = "SELECT * FROM reviews WHERE film_id = ?  LIMIT ?";
         return jdbcTemplate.query(sql, this::mapRowToReview, filmId, count);

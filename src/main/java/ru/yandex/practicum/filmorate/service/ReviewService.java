@@ -12,7 +12,6 @@ import ru.yandex.practicum.filmorate.model.*;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -67,7 +66,6 @@ public class ReviewService {
         }
         reviews.forEach(review ->
                 addReactionForReview(review, reactionDao.getReactions(review.getReviewId())));
-        reviews.forEach(review -> review.setUseful(calculateUseful(review)));
         return reviews.stream()
                 .sorted(Comparator.comparingInt(Review::getUseful).reversed())
                 .collect(Collectors.toList());
@@ -78,7 +76,6 @@ public class ReviewService {
         Review review = reviewDao.getReviewById(reviewId);
         List<Reaction> reactions = reactionDao.getReactions(reviewId);
         addReactionForReview(review, reactions);
-        review.setUseful(calculateUseful(review));
         return review;
     }
 
@@ -93,35 +90,23 @@ public class ReviewService {
     public void saveLike(int reviewId, int userId) {
         isReviewExists(reviewId);
         isUserExists(userId);
-        Review review = reviewDao.getReviewById(reviewId);
-        review.setUseful(review.getUseful() + 1);
-        reviewDao.updateUseful(reviewId, review.getUseful());
         reactionDao.saveLike(reviewId, userId);
     }
 
     public void saveDislike(int reviewId, int userId) {
         isReviewExists(reviewId);
         isUserExists(userId);
-        Review review = reviewDao.getReviewById(reviewId);
-        review.setUseful(review.getUseful() - 1);
-        reviewDao.updateUseful(reviewId, review.getUseful());
         reactionDao.saveDislike(reviewId, userId);
     }
 
     public void deleteLike(int reviewId, int userId) {
         isReactionExists(reviewId, userId);
         reactionDao.deleteReaction(reviewId, userId);
-        Review review = reviewDao.getReviewById(reviewId);
-        reviewDao.updateUseful(reviewId, review.getUseful());
-        review.setUseful(review.getUseful() - 1);
     }
 
     public void deleteDislike(int reviewId, int userId) {
         isReactionExists(reviewId, userId);
         reactionDao.deleteReaction(reviewId, userId);
-        Review review = reviewDao.getReviewById(reviewId);
-        reviewDao.updateUseful(reviewId, review.getUseful());
-        review.setUseful(review.getUseful() + 1);
     }
 
     private void isUserExists(Integer userId) {
@@ -150,18 +135,5 @@ public class ReviewService {
 
     private void addReactionForReview(Review review, List<Reaction> reactions) {
         reactions.forEach(reaction -> review.getUserReactions().add(reaction));
-    }
-
-    private Integer calculateUseful(Review review) {
-        Set<Reaction> reactions = review.getUserReactions();
-        Integer useful = 0;
-        for (Reaction reaction : reactions) {
-            if (reaction.getReaction() == ReactionType.LIKE) {
-                useful++;
-            } else {
-                useful--;
-            }
-        }
-        return useful;
     }
 }

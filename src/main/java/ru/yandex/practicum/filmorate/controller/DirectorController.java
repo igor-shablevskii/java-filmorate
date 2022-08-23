@@ -35,14 +35,14 @@ public class DirectorController {
     }
 
     @GetMapping
-    public List<Director> readAll() {
+    public List<Director> getAll() {
         List<Director> directorList = directorService.getAllDirectors();
         log.info("Get all directors, count = {}", directorList.size());
         return directorList;
     }
 
     @GetMapping(value = "/{id}")
-    public Director getDirector(@PathVariable int id) {
+    public Director get(@PathVariable int id) {
         Director director = directorService.getDirectorById(id);
         log.info("Get director by id = {}", director.getId());
         return director;

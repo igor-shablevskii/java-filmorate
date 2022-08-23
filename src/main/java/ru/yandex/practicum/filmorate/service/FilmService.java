@@ -49,20 +49,15 @@ public class FilmService {
     }
 
     public Film update(Film film) {
-        if (!filmDao.containsInStorage(film.getId())) {
-            throw new NotFoundException("Film with id = " + film.getId() + " not found");
-        }
+        isFilmExists(film.getId());
         Film updatedFilm = filmDao.update(film);
         genreDao.setGenre(updatedFilm);
         directorDao.setDirector(updatedFilm);
-        System.out.println(updatedFilm.getRate());
         return updatedFilm;
     }
 
     public Film getFilmById(int filmId) {
-        if (!filmDao.containsInStorage(filmId)) {
-            throw new NotFoundException("Film with id = " + filmId + " not found");
-        }
+        isFilmExists(filmId);
         Film film = filmDao.getFilmById(filmId);
         film.getGenres().addAll(genreDao.loadGenres(filmId));
         film.getDirectors().addAll(directorDao.loadDirectors(filmId));
@@ -78,31 +73,17 @@ public class FilmService {
     }
 
     public void saveLike(int filmId, int userId) {
-        if (!filmDao.containsInStorage(filmId)) {
-            throw new NotFoundException("Film with id = " + filmId + " not found");
-        }
-        if (!userDao.containsInStorage(userId)) {
-            throw new NotFoundException("User with id = " + userId + " not found");
-        }
+        isFilmExists(filmId);
+        isUserExists(userId);
         likeDao.saveLike(filmId, userId);
         feedDao.create(new Feed(userId, EventType.LIKE, Operation.ADD, filmId));
-        Film film = getFilmById(filmId);
-        film.setRate(film.getRate() + 1);
-        update(film);
     }
 
     public void deleteLike(int filmId, int userId) {
-        if (!filmDao.containsInStorage(filmId)) {
-            throw new NotFoundException("Film with id = " + filmId + " not found");
-        }
-        if (!userDao.containsInStorage(userId)) {
-            throw new NotFoundException("User with id = " + userId + " not found");
-        }
+        isFilmExists(filmId);
+        isUserExists(userId);
         likeDao.deleteLike(filmId, userId);
         feedDao.create(new Feed(userId, EventType.LIKE, Operation.REMOVE, filmId));
-        Film film = getFilmById(filmId);
-        film.setRate(film.getRate() - 1);
-        update(film);
     }
 
     public List<Film> getPopularFilms(Integer count, Integer genreId, Integer yearId) {
@@ -125,9 +106,7 @@ public class FilmService {
     }
 
     public List<Film> getSortedFilmsByDirectors(int directorId, String sortBy) {
-        if (!directorDao.containsInStorage(directorId)) {
-            throw new NotFoundException("Director with id = " + directorId + " not found");
-        }
+        isDirectorExists(directorId);
         if (!sortBy.equals("year") && !sortBy.equals("likes")) {
             throw new RuntimeException("Sorting type not found");
         }
@@ -145,19 +124,13 @@ public class FilmService {
     }
 
     public List<Film> getUsersCommonFilms(int userId, int otherUserId) {
-        if (!userDao.containsInStorage(userId)) {
-            throw new NotFoundException("User with id = " + userId + " not found");
-        }
-        if (!userDao.containsInStorage(otherUserId)) {
-            throw new NotFoundException("User with id = " + otherUserId + " not found");
-        }
+        isUserExists(userId);
+        isUserExists(otherUserId);
         return filmDao.getUsersCommonFilms(userId, otherUserId);
     }
 
     public void deleteFilmById(int filmId) {
-        if (!feedDao.containsInStorage(filmId)) {
-            throw new NotFoundException("Film with id " + filmId + " not found");
-        }
+        isFilmExists(filmId);
         filmDao.deleteFilmById(filmId);
     }
 
@@ -190,5 +163,23 @@ public class FilmService {
                 .peek(f -> f.getGenres().addAll(genreDao.loadGenres(f.getId())))
                 .peek(f -> f.getDirectors().addAll(directorDao.loadDirectors(f.getId())))
                 .collect(Collectors.toList());
+    }
+
+    private void isFilmExists(Integer filmId) {
+        if (!filmDao.containsInStorage(filmId)) {
+            throw new NotFoundException(String.format("Film with id = %d not found", filmId));
+        }
+    }
+
+    private void isUserExists(Integer userId) {
+        if (!userDao.containsInStorage(userId)) {
+            throw new NotFoundException(String.format("User with id = %d not found", userId));
+        }
+    }
+
+    private void isDirectorExists(Integer directorId) {
+        if (!directorDao.containsInStorage(directorId)) {
+            throw new NotFoundException(String.format("Director with id = %d not found", directorId));
+        }
     }
 }

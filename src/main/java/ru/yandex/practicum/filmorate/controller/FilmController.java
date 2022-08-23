@@ -2,17 +2,20 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
+@Validated
 @RestController
 @RequestMapping("/films")
 public class FilmController {
@@ -40,14 +43,14 @@ public class FilmController {
     }
 
     @GetMapping
-    public List<Film> readAll() {
+    public List<Film> getAll() {
         List<Film> listFilm = filmService.getAllFilms();
         log.info("Get all films, count = {}", listFilm.size());
         return listFilm;
     }
 
     @GetMapping("/{filmId}")
-    public Film getFilm(@PathVariable int filmId) {
+    public Film get(@PathVariable int filmId) {
         Film film = filmService.getFilmById(filmId);
         log.info("Get film by id = {}", film.getId());
         return film;
@@ -66,7 +69,7 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public List<Film> getPopularFilms(@RequestParam(defaultValue = "10") Integer count,
+    public List<Film> getPopularFilms(@RequestParam (defaultValue = "10") @Positive Integer count,
                                       @RequestParam(required = false) Integer genreId,
                                       @RequestParam(required = false) Integer year) {
         List<Film> popularFilms = filmService.getPopularFilms(count, genreId, year);
@@ -76,7 +79,7 @@ public class FilmController {
 
 
     @GetMapping("/common")
-    private List<Film> getUsersCommonFilms(@RequestParam(name = "userId") int userId,
+    public List<Film> getUsersCommonFilms(@RequestParam(name = "userId") int userId,
                                            @RequestParam(name = "friendId") int otherUserId) {
         log.info("Get common films by two users id = {}", filmService.getUsersCommonFilms(userId, otherUserId));
         return filmService.getUsersCommonFilms(userId, otherUserId);
@@ -84,7 +87,7 @@ public class FilmController {
 
 
     @DeleteMapping("/{filmId}")
-    private void deleteFilmById(@PathVariable int filmId) {
+    public void deleteById(@PathVariable int filmId) {
         log.info("Delete film by id = {}", filmId);
         filmService.deleteFilmById(filmId);
     }

@@ -23,14 +23,14 @@ public class ReviewController {
 
 
     @GetMapping("/{id}")
-    public Review getReview(@PathVariable Integer id) {
+    public Review get(@PathVariable Integer id) {
         Review review = reviewService.getReviewById(id);
         log.info("Get review by id = {}", review.getReviewId());
         return review;
     }
 
     @GetMapping
-    public List<Review> getReviews(@RequestParam(defaultValue = "10", required = false) Integer count,
+    public List<Review> getAll(@RequestParam(defaultValue = "10", required = false) Integer count,
                                    @RequestParam(required = false) Integer filmId) {
         List<Review> reviews = reviewService.getReviews(count, filmId);
         log.info("Get all reviews, count = {}", reviews.size());
@@ -38,33 +38,33 @@ public class ReviewController {
     }
 
     @PostMapping
-    public Review createReview(@RequestBody @Valid Review review) {
+    public Review create(@RequestBody @Valid Review review) {
         Review savedReview = reviewService.save(review);
         log.info("Review {} created and added in storage", savedReview);
         return savedReview;
     }
 
     @PutMapping
-    public Review updateReview(@RequestBody @Valid Review review) {
+    public Review update(@RequestBody @Valid Review review) {
         Review updatedReview = reviewService.update(review);
         log.info("Review {} updated in storage", review);
         return updatedReview;
     }
 
     @DeleteMapping("/{id}")
-    public void deleteReview(@PathVariable Integer id) {
+    public void deleteById(@PathVariable Integer id) {
         reviewService.deleteReview(id);
         log.info("Review by id = {} deleted in storage", id);
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public void likeReview(@PathVariable Integer id, @PathVariable Integer userId) {
+    public void addLike(@PathVariable Integer id, @PathVariable Integer userId) {
         reviewService.saveLike(id, userId);
         log.info("User {} likes review id {}", userId, id);
     }
 
     @PutMapping("/{id}/dislike/{userId}")
-    public void dislikeReview(@PathVariable Integer id, @PathVariable Integer userId) {
+    public void addDislike(@PathVariable Integer id, @PathVariable Integer userId) {
         reviewService.saveDislike(id, userId);
         log.info("User {} doesn't like review id {}", userId, id);
     }

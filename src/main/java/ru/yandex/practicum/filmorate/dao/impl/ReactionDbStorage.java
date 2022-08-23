@@ -32,6 +32,7 @@ public class ReactionDbStorage implements ReactionDao {
         String sql = "INSERT INTO reviews_reactions " +
                      "(review_id, user_id, reaction_type) VALUES (?, ?, ?)";
         jdbcTemplate.update(sql, reviewId, userId, ReactionType.LIKE.name());
+        updateUseful(reviewId);
     }
 
     @Override
@@ -39,6 +40,7 @@ public class ReactionDbStorage implements ReactionDao {
         String sql = "INSERT INTO reviews_reactions " +
                      "(review_id, user_id, reaction_type) VALUES (?, ?, ?)";
         jdbcTemplate.update(sql, reviewId, userId, ReactionType.DISLIKE.name());
+        updateUseful(reviewId);
     }
 
     @Override
@@ -46,6 +48,7 @@ public class ReactionDbStorage implements ReactionDao {
         String sql = "DELETE from reviews_reactions " +
                      "WHERE review_id=? AND user_id = ?";
         jdbcTemplate.update(sql, reviewId, userId);
+        updateUseful(reviewId);
     }
 
     @Override
@@ -54,6 +57,21 @@ public class ReactionDbStorage implements ReactionDao {
                           "WHERE review_id = ? AND user_id = ?";
         int result = jdbcTemplate.queryForObject(sqlQuery, Integer.class, reviewId, userId);
         return result == 1;
+    }
+
+    private void updateUseful(long reviewId) {
+        String sqlQuery = "UPDATE reviews r " +
+                "SET useful = (SELECT " +
+                "(SELECT count(rr.review_id) " +
+                "FROM reviews_reactions rr " +
+                "WHERE rr.review_id = ? " +
+                "AND rr.reaction_type = 'LIKE') - " +
+                "(SELECT count(rr.review_id) " +
+                "FROM reviews_reactions rr " +
+                "WHERE rr.review_id = ? " +
+                "AND rr.reaction_type = 'DISLIKE'))" +
+                "WHERE r.review_id = ?";
+        jdbcTemplate.update(sqlQuery, reviewId, reviewId, reviewId);
     }
 
     private Reaction mapRowToReactionOnReview(ResultSet rs, int rowNum)

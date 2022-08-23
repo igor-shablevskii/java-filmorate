@@ -8,12 +8,12 @@ import ru.yandex.practicum.filmorate.dao.LikeDao;
 import java.util.List;
 
 @Repository
-public class LikeBbStorage implements LikeDao {
+public class LikeDbStorage implements LikeDao {
 
     private final JdbcTemplate jdbcTemplate;
 
     @Autowired
-    public LikeBbStorage(JdbcTemplate jdbcTemplate) {
+    public LikeDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -21,12 +21,14 @@ public class LikeBbStorage implements LikeDao {
     public void saveLike(int filmId, int userId) {
         String sql = "INSERT INTO film_likes (film_id, user_id) VALUES (?, ?);";
         jdbcTemplate.update(sql, filmId, userId);
+        updateRate(filmId);
     }
 
     @Override
     public void deleteLike(int filmId, int userId) {
         String sql = "DELETE FROM film_likes WHERE film_id = ? AND user_id = ?;";
         jdbcTemplate.update(sql, filmId, userId);
+        updateRate(filmId);
     }
 
     @Override
@@ -46,5 +48,14 @@ public class LikeBbStorage implements LikeDao {
         String sqlQuery = "SELECT count(*) FROM film_likes WHERE film_id = ? AND user_id = ?;";
         int result = jdbcTemplate.queryForObject(sqlQuery, Integer.class, filmId, userId);
         return result == 1;
+    }
+
+    private void updateRate(long filmId) {
+        String sqlQuery = "UPDATE films f " +
+                "SET rate = (SELECT count(l.user_id) FROM film_likes l, users u " +
+                "WHERE l.film_id = f.film_id " +
+                "AND l.USER_ID = u.USER_ID " +
+                "AND film_id = ?)";
+        jdbcTemplate.update(sqlQuery, filmId);
     }
 }

@@ -23,9 +23,7 @@ public class DirectorService {
     }
 
     public Director update(Director director) {
-        if (!directorDao.containsInStorage(director.getId())) {
-            throw new NotFoundException("Director with id = " + director.getId() + " not found");
-        }
+        isDirectorExists(director.getId());
         return directorDao.update(director);
     }
 
@@ -34,16 +32,18 @@ public class DirectorService {
     }
 
     public Director getDirectorById(int id) {
-        if (!directorDao.containsInStorage(id)) {
-            throw new NotFoundException("Director with id = " + id + " not found");
-        }
+        isDirectorExists(id);
         return directorDao.getDirectorById(id);
     }
 
     public void removeDirectorById(int id) {
-        if (!directorDao.containsInStorage(id)) {
-            throw new NotFoundException("Director with id = " + id + " not found");
-        }
+        isDirectorExists(id);
         directorDao.removeDirectorById(id);
+    }
+
+    private void isDirectorExists(Integer id) {
+        if (!directorDao.containsInStorage(id)) {
+            throw new NotFoundException(String.format("Director with id = %d not found", id));
+        }
     }
 }

@@ -27,7 +27,7 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    public User getUser(@PathVariable int userId) {
+    public User get(@PathVariable int userId) {
         User user = userService.getUserById(userId);
         log.info("Get user by id = {}", user.getId());
         return user;
@@ -49,7 +49,7 @@ public class UserController {
     }
 
     @GetMapping
-    public List<User> readAll() {
+    public List<User> getAll() {
         List<User> userList = userService.getAllUsers();
         log.info("Get all user, count = {}", userList.size());
         return userList;
@@ -88,7 +88,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{userId}")
-    public void deleteUserById(@PathVariable int userId) {
+    public void deleteById(@PathVariable int userId) {
         log.info("Delete user by id = {}", userId);
         userService.deleteUserById(userId);
     }
