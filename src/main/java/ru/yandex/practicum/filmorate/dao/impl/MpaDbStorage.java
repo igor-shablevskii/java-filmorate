@@ -27,13 +27,13 @@ public class MpaDbStorage implements MpaDao {
     }
 
     @Override
-    public Mpa getMpaById(int id) {
+    public Mpa getMpaById(Integer id) {
         String sql = "SELECT * FROM mpa_ratings WHERE mpa_id = ?;";
         return jdbcTemplate.queryForObject(sql, this::mapRowToMpa, id);
     }
 
     @Override
-    public boolean containsInStorage(int id) {
+    public boolean containsInStorage(Integer id) {
         String sqlQuery = "SELECT count(*) FROM mpa_ratings WHERE mpa_id = ?;";
         int result = jdbcTemplate.queryForObject(sqlQuery, Integer.class, id);
         return result == 1;

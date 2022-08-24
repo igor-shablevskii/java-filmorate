@@ -13,8 +13,8 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(of = "id")
 @Builder
 public class Director {
-    private Integer id;
-    @NotNull
+    @NotNull(groups = {Update.class})
+    private Long id;
     @NotBlank
     private String name;
 }

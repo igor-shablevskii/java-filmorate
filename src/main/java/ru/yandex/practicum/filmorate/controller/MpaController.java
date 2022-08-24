@@ -24,14 +24,14 @@ public class MpaController {
     }
 
     @GetMapping("/{id}")
-    public Mpa getMpa(@PathVariable int id) {
+    public Mpa get(@PathVariable int id) {
         Mpa mpa = mpaService.getMpaById(id);
         log.info("Get mpa by id = {}", mpa.getId());
         return mpa;
     }
 
     @GetMapping
-    public List<Mpa> readAll() {
+    public List<Mpa> getAll() {
         List<Mpa> mpaList = mpaService.getAllMpa();
         log.info("Get all mpa, count = {}", mpaList.size());
         return mpaList;

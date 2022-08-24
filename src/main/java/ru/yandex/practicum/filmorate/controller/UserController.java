@@ -2,10 +2,12 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Update;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
@@ -14,6 +16,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Validated
 @Slf4j
 @RestController
 @RequestMapping("/users")
@@ -27,7 +30,7 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    public User getUser(@PathVariable int userId) {
+    public User get(@PathVariable Long userId) {
         User user = userService.getUserById(userId);
         log.info("Get user by id = {}", user.getId());
         return user;
@@ -42,38 +45,38 @@ public class UserController {
     }
 
     @PutMapping
-    public User update(@RequestBody @Valid User user) {
+    public User update(@RequestBody @Validated(Update.class) User user) {
         User updatedUser = userService.update(user);
         log.info("User {} updated and saved in storage", updatedUser);
         return updatedUser;
     }
 
     @GetMapping
-    public List<User> readAll() {
+    public List<User> getAll() {
         List<User> userList = userService.getAllUsers();
         log.info("Get all user, count = {}", userList.size());
         return userList;
     }
 
     @PutMapping("/{userId}/friends/{friendId}")
-    public void addFriend(@PathVariable int userId, @PathVariable int friendId) {
+    public void addFriend(@PathVariable Long userId, @PathVariable Long friendId) {
         userService.addFriend(userId, friendId);
     }
 
     @DeleteMapping("/{userId}/friends/{friendId}")
-    public void deleteFriend(@PathVariable int userId, @PathVariable int friendId) {
+    public void deleteFriend(@PathVariable Long userId, @PathVariable Long friendId) {
         log.info("Delete friend id = {} user by id = {}", friendId, userId);
         userService.deleteFriend(userId, friendId);
     }
 
     @GetMapping("/{userId}/friends")
-    public List<User> getFriendByUserId(@PathVariable int userId) {
+    public List<User> getFriendByUserId(@PathVariable Long userId) {
         log.info("Get users friends by id = {}", userId);
         return userService.getFriendsByUserId(userId);
     }
 
     @GetMapping("/{userId}/friends/common/{otherUserId}")
-    public List<User> getCommonFriends(@PathVariable int userId, @PathVariable int otherUserId) {
+    public List<User> getCommonFriends(@PathVariable Long userId, @PathVariable Long otherUserId) {
         List<User> listCommonFriends = userService.getCommonFriends(userId, otherUserId);
         log.info("Get list common friends user id = {} and user id = {}, list ids = {}",
                 userId, otherUserId, listCommonFriends.stream().map(User::getId).collect(Collectors.toList()));
@@ -81,20 +84,20 @@ public class UserController {
     }
 
     @GetMapping(value = "/{id}/feed")
-    public List<Feed> getAllFeedsByUserId(@PathVariable int id) {
+    public List<Feed> getAllFeedsByUserId(@PathVariable Long id) {
         List<Feed> feedList = userService.getAllFeedsByUserId(id);
         log.info("Get list feeds user id = {}, list ids = {}", id, feedList.size());
         return feedList;
     }
 
     @DeleteMapping("/{userId}")
-    public void deleteUserById(@PathVariable int userId) {
+    public void deleteById(@PathVariable Long userId) {
         log.info("Delete user by id = {}", userId);
         userService.deleteUserById(userId);
     }
 
     @GetMapping("{id}/recommendations")
-    public List<Film> getFilmRecommendations(@PathVariable int id) {
+    public List<Film> getFilmRecommendations(@PathVariable Long id) {
         List<Film> recommendations = userService.getFilmRecommendations(id);
         log.info("Get recommendations ids = {}", recommendations.stream()
                 .map(Film::getId)

@@ -19,7 +19,7 @@ public interface DirectorDao {
      * (используется в FilmService
      * при получении фильма или списка фильмов из БД)
      */
-    List<Director> loadDirectors(int filmId);
+    List<Director> loadDirectors(Long filmId);
 
     /**
      * Получить всех режиссёров
@@ -29,13 +29,13 @@ public interface DirectorDao {
     /**
      * Получить режиссёра по его id
      */
-    Director getDirectorById(int id);
+    Director getDirectorById(Long id);
 
     /**
      * Проверить наличие режиссёра в БД
      * по его id
      */
-    boolean containsInStorage(int id);
+    boolean containsInStorage(Long id);
 
     /**
      * Сохранить режиссёра в БД
@@ -50,5 +50,5 @@ public interface DirectorDao {
     /**
      * Удалить режиссёра по id из БД
      */
-    void removeDirectorById(int id);
+    void removeDirectorById(Long id);
 }

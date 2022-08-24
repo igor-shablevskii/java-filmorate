@@ -2,9 +2,11 @@ package ru.yandex.practicum.filmorate.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
-
+import org.springframework.format.annotation.DateTimeFormat;
+import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -18,19 +20,20 @@ import java.util.Set;
 @EqualsAndHashCode(of = "id")
 @Builder
 public class Film {
-    private Integer id;
-    @NotNull
-    private String name;
-    @NotNull
+    @NotNull(groups = {Update.class})
+    private Long id;
     @NotBlank
+    private String name;
+    @Size(max = 200)
     private String description;
-    @NotNull
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate releaseDate;
-    @NotNull
+    @DecimalMin(value = "0")
     private Integer duration;
-    @JsonIgnore
-    private Integer rate = 0;
-    private Mpa mpa;
     private Set<Genre> genres = new LinkedHashSet<>();
     private Set<Director> directors = new HashSet<>();
+    @NotNull
+    private Mpa mpa;
+    @JsonIgnore
+    private Integer rate = 0;
 }

@@ -41,7 +41,7 @@ public class DirectorDbStorage implements DirectorDao {
     }
 
     @Override
-    public List<Director> loadDirectors(int filmId) {
+    public List<Director> loadDirectors(Long filmId) {
         String sql = "SELECT d.director_id, d.director_name FROM film_director fd " +
                 "LEFT JOIN directors d ON d.director_id = fd.director_id WHERE fd.film_id = ? ORDER BY d.director_id;";
         return jdbcTemplate.query(sql, this::mapRowToDirector, filmId);
@@ -56,7 +56,7 @@ public class DirectorDbStorage implements DirectorDao {
             stmt.setString(1, director.getName());
             return stmt;
         }, keyHolder);
-        director.setId(Objects.requireNonNull(keyHolder.getKey()).intValue());
+        director.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
         return director;
     }
 
@@ -70,7 +70,7 @@ public class DirectorDbStorage implements DirectorDao {
     }
 
     @Override
-    public Director getDirectorById(int id) {
+    public Director getDirectorById(Long id) {
         String sql = "SELECT * FROM directors WHERE director_id = ?;";
         return jdbcTemplate.queryForObject(sql, this::mapRowToDirector, id);
     }
@@ -82,13 +82,13 @@ public class DirectorDbStorage implements DirectorDao {
     }
 
     @Override
-    public void removeDirectorById(int id) {
+    public void removeDirectorById(Long id) {
         String sql = "DELETE FROM directors where director_id = ?;";
         jdbcTemplate.update(sql, id);
     }
 
     @Override
-    public boolean containsInStorage(int id) {
+    public boolean containsInStorage(Long id) {
         String sqlQuery = "SELECT count(*) FROM directors WHERE director_id = ?;";
         int result = jdbcTemplate.queryForObject(sqlQuery, Integer.class, id);
         return result == 1;
@@ -96,7 +96,7 @@ public class DirectorDbStorage implements DirectorDao {
 
     private Director mapRowToDirector(ResultSet resultSet, int rowNum) throws SQLException {
         return Director.builder()
-                .id(resultSet.getInt("director_id"))
+                .id(resultSet.getLong("director_id"))
                 .name(resultSet.getString("director_name"))
                 .build();
     }

@@ -15,7 +15,8 @@ import java.time.LocalDate;
 @EqualsAndHashCode(of = "id")
 @Builder
 public class User {
-    private Integer id;
+    @NotNull(groups = {Update.class})
+    private Long id;
     @NotNull
     private String name;
     @NotNull

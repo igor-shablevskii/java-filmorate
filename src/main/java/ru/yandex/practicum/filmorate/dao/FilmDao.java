@@ -24,7 +24,7 @@ public interface FilmDao {
     /**
      * Получить фильм по его id из БД
      */
-    Film getFilmById(int filmId);
+    Film getFilmById(Long filmId);
 
     /**
      * Получить список фильмов
@@ -36,24 +36,24 @@ public interface FilmDao {
     /**
      * Проверка наличия фильма в БД
      */
-    boolean containsInStorage(int filmId);
+    boolean containsInStorage(Long filmId);
 
     /**
      * Получить список общих фильмов двух пользователей
      * отсортированный по популярности
      */
-    List<Film> getUsersCommonFilms(int userId, int otherUserId);
+    List<Film> getUsersCommonFilms(Long userId, Long otherUserId);
 
     /**
      * Удалить фильм по id
      */
-    void deleteFilmById(int filmId);
+    void deleteFilmById(Long filmId);
 
     /**
      * Получить список фильмов режиссёра
      * отсортированных по типу sortBy
      */
-    List<Film> getSortedFilmsByDirectors(int directorId, String sortBy);
+    List<Film> getSortedFilmsByDirectors(Long directorId);
 
     /**
      * Получить список фильмов
@@ -83,7 +83,7 @@ public interface FilmDao {
      * Получить список рекомендованных
      * для пользователя фильмов
      */
-    List<Film> getFilmRecommendations(Integer userId);
+    List<Film> getFilmRecommendations(Long userId);
 
     /**
      * Получить список фильмов,

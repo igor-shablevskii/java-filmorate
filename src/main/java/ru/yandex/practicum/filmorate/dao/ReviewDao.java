@@ -25,28 +25,22 @@ public interface ReviewDao {
      * Получить отзывы к фильму из БД в указанном количестве,
      * либо 10 если количество не указано
      */
-    List<Review> getReviewsByFilmId(Integer count, Integer filmId);
+    List<Review> getReviewsByFilmId(Integer count, Long filmId);
 
     /**
      * Получить отзыв по его id из БД
      */
-    Review getReviewById(int reviewId);
+    Review getReviewById(Long reviewId);
 
     /**
      * Удалить отзыв по его id из БД
      */
-    void deleteReview(int reviewId);
+    void deleteReview(Long reviewId);
 
     /**
      * Проверка наличия отзыва в БД
      */
-    boolean containsInStorage(int reviewId);
-
-    /**
-     * Обновление параметра useful
-     * для отзывы
-     */
-    void updateUseful(Integer reviewId, Integer useful);
+    boolean containsInStorage(Long reviewId);
 
 }
 

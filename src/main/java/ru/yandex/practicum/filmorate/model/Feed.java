@@ -12,14 +12,14 @@ import java.time.Instant;
 @EqualsAndHashCode(of = "eventId")
 @Builder
 public class Feed {
-    private int eventId;
-    private int userId;
+    private Long eventId;
+    private Long userId;
     private long timestamp = Instant.now().toEpochMilli();
     private EventType eventType;
     private Operation operation;
-    private int entityId;
+    private Long entityId;
 
-    public Feed(int userId, EventType eventType, Operation operation, int entityId) {
+    public Feed(Long userId, EventType eventType, Operation operation, Long entityId) {
         this.userId = userId;
         this.eventType = eventType;
         this.operation = operation;

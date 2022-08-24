@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.HashSet;
 import java.util.Set;
@@ -15,7 +16,8 @@ import java.util.Set;
 @EqualsAndHashCode(of = "reviewId")
 @Builder
 public class Review {
-    private Integer reviewId;
+    @NotNull(groups = {Update.class})
+    private Long reviewId;
     @NotNull
     private String content;
     private Integer useful;
@@ -23,8 +25,8 @@ public class Review {
     @NotNull
     private Boolean isPositive;
     @NotNull
-    private Integer userId;
+    private Long userId;
     @NotNull
-    private Integer filmId;
+    private Long filmId;
     private Set<Reaction> userReactions = new HashSet<>();
 }

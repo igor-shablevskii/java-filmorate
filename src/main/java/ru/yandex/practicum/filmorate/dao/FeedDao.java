@@ -11,7 +11,7 @@ public interface FeedDao {
      * Возвращает список событий
      * для пользователя по его id
      */
-    List<Feed> getAllFeedsByUserId(int id);
+    List<Feed> getAllFeedsByUserId(Long id);
 
     /**
      * Добавить событие в БД
@@ -22,5 +22,5 @@ public interface FeedDao {
      * Проверить наличие события в БД
      * по его id
      */
-    boolean containsInStorage(int id);
+    boolean containsInStorage(Long id);
 }

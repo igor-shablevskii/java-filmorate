@@ -35,16 +35,12 @@ public class UserService {
     }
 
     public User update(User user) {
-        if (!userDao.containsInStorage(user.getId())) {
-            throw new NotFoundException("User with id = " + user.getId() + " not found");
-        }
+        isUserExists(user.getId());
         return userDao.update(user);
     }
 
-    public User getUserById(int userId) {
-        if (!userDao.containsInStorage(userId)) {
-            throw new NotFoundException("User with id = " + userId + " not found");
-        }
+    public User getUserById(Long userId) {
+        isUserExists(userId);
         return userDao.getUserById(userId);
     }
 
@@ -52,39 +48,29 @@ public class UserService {
         return userDao.getAllUsers();
     }
 
-    public void addFriend(int userId, int friendId) {
-        if (!userDao.containsInStorage(userId)) {
-            throw new NotFoundException("User with id = " + userId + " not found");
-        }
-        if (!userDao.containsInStorage(friendId)) {
-            throw new NotFoundException("User with id = " + friendId + " not found");
-        }
+    public void addFriend(Long userId, Long friendId) {
+        isUserExists(userId);
+        isUserExists(friendId);
         feedDao.create(new Feed(userId, EventType.FRIEND, Operation.ADD, friendId));
         friendDao.saveFriend(userId, friendId);
     }
 
-    public void deleteFriend(int userId, int friendId) {
-        if (!userDao.containsInStorage(userId)) {
-            throw new NotFoundException("User with id = " + userId + " not found");
-        }
-        if (!userDao.containsInStorage(friendId)) {
-            throw new NotFoundException("User with id = " + friendId + " not found");
-        }
+    public void deleteFriend(Long userId, Long friendId) {
+        isUserExists(userId);
+        isUserExists(friendId);
         feedDao.create(new Feed(userId, EventType.FRIEND, Operation.REMOVE, friendId));
         friendDao.deleteFriend(userId, friendId);
     }
 
-    public List<User> getFriendsByUserId(int userId) {
-        if (!userDao.containsInStorage(userId)) {
-            throw new NotFoundException("User with id = " + userId + " not found");
-        }
+    public List<User> getFriendsByUserId(Long userId) {
+        isUserExists(userId);
         return friendDao.getFriendsByUserId(userId)
                 .stream()
                 .map(this::getUserById)
                 .collect(Collectors.toList());
     }
 
-    public List<User> getCommonFriends(int userId, int otherUserId) {
+    public List<User> getCommonFriends(Long userId, Long otherUserId) {
         List<User> friends = getFriendsByUserId(userId);
         List<User> otherFriends = getFriendsByUserId(otherUserId);
         return friends.stream()
@@ -92,21 +78,27 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    public List<Feed> getAllFeedsByUserId(int id) {
+    public List<Feed> getAllFeedsByUserId(Long id) {
         return feedDao.getAllFeedsByUserId(id);
     }
 
-    public List<Film> getFilmRecommendations(Integer userId) {
+    public List<Film> getFilmRecommendations(Long userId) {
         if (!userDao.containsInStorage(userId)) {
             throw new NotFoundException("User with id = " + userId + " not found");
         }
         return filmDao.getFilmRecommendations(userId);
     }
 
-    public void deleteUserById(int userId) {
+    public void deleteUserById(Long userId) {
         if (!userDao.containsInStorage(userId)) {
             throw new NotFoundException("User with id = " + userId + " not found");
         }
         userDao.deleteUserById(userId);
+    }
+
+    private void isUserExists(Long userId) {
+        if (!userDao.containsInStorage(userId)) {
+            throw new NotFoundException(String.format("User with id = %d not found", userId));
+        }
     }
 }

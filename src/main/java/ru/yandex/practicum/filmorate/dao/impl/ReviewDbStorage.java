@@ -35,12 +35,12 @@ public class ReviewDbStorage implements ReviewDao {
             PreparedStatement stmt = connection.prepareStatement(sql, new String[]{"review_id"});
             stmt.setString(1, review.getContent());
             stmt.setBoolean(2, review.getIsPositive());
-            stmt.setInt(3, review.getUserId());
-            stmt.setInt(4, review.getFilmId());
+            stmt.setLong(3, review.getUserId());
+            stmt.setLong(4, review.getFilmId());
             stmt.setInt(5, review.getUseful());
             return stmt;
         }, keyHolder);
-        int reviewId = Objects.requireNonNull(keyHolder.getKey()).intValue();
+        Long reviewId = Objects.requireNonNull(keyHolder.getKey()).longValue();
         review.setReviewId(reviewId);
         return review;
     }
@@ -57,14 +57,8 @@ public class ReviewDbStorage implements ReviewDao {
     }
 
     @Override
-    public void updateUseful(Integer reviewId, Integer useful) {
-        String sql = "UPDATE reviews SET useful = ? WHERE review_id = ?";
-        jdbcTemplate.update(sql, useful, reviewId);
-    }
-
-    @Override
-    public List<Review> getReviewsByFilmId(Integer count, Integer filmId) {
-        String sql = "SELECT * FROM reviews WHERE film_id = ?  LIMIT ?";
+    public List<Review> getReviewsByFilmId(Integer count, Long filmId) {
+        String sql = "SELECT * FROM reviews WHERE film_id = ? ORDER BY useful DESC LIMIT ?";
         return jdbcTemplate.query(sql, this::mapRowToReview, filmId, count);
     }
 
@@ -75,19 +69,19 @@ public class ReviewDbStorage implements ReviewDao {
     }
 
     @Override
-    public Review getReviewById(int reviewId) {
+    public Review getReviewById(Long reviewId) {
         String sql = "SELECT * FROM reviews WHERE review_id = ?";
         return jdbcTemplate.queryForObject(sql, this::mapRowToReview, reviewId);
     }
 
     @Override
-    public void deleteReview(int reviewId) {
+    public void deleteReview(Long reviewId) {
         String sql = "DELETE FROM reviews WHERE review_id = ?";
         jdbcTemplate.update(sql, reviewId);
     }
 
     @Override
-    public boolean containsInStorage(int reviewId) {
+    public boolean containsInStorage(Long reviewId) {
         String sqlQuery = "SELECT count(*) FROM reviews WHERE review_id = ?";
         int result = jdbcTemplate.queryForObject(sqlQuery, Integer.class, reviewId);
         return result == 1;
@@ -95,11 +89,11 @@ public class ReviewDbStorage implements ReviewDao {
 
     private Review mapRowToReview(ResultSet rs, int rowNum) throws SQLException {
         return Review.builder()
-                .reviewId(rs.getInt("review_id"))
+                .reviewId(rs.getLong("review_id"))
                 .content(rs.getString("content"))
                 .isPositive(rs.getBoolean("is_positive"))
-                .userId(rs.getInt("user_id"))
-                .filmId(rs.getInt("film_id"))
+                .userId(rs.getLong("user_id"))
+                .filmId(rs.getLong("film_id"))
                 .useful(rs.getInt("useful"))
                 .userReactions(new HashSet<>())
                 .build();

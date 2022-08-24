@@ -8,26 +8,26 @@ public interface ReactionDao {
     /**
      * Получить список всех реакций для отзыва
      */
-    List<Reaction> getReactions(Integer reviewId);
+    List<Reaction> getReactions(Long reviewId);
 
     /**
      * Добавить лайк пользователя отзыву
      */
-    void saveLike(int reviewId, int userId);
+    void saveLike(Long reviewId, Long userId);
 
     /**
      * Добавить дизлайк пользователя отзыву
      */
-    void saveDislike(int reviewId, int userId);
+    void saveDislike(Long reviewId, Long userId);
 
     /**
      * Удалить лайк/дизлайк пользователя отзыву
      */
-    void deleteReaction(int reviewId, int userId);
+    void deleteReaction(Long reviewId, Long userId);
 
     /**
      * Проверка наличия лайка/дизлайка в БД
      */
-    boolean containsReactionInStorage(int reviewId, int userId);
+    boolean containsReactionInStorage(Long reviewId, Long userId);
 
 }
