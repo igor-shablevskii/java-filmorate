@@ -8,21 +8,21 @@ public interface FriendDao {
      * Добавить пользователю с id == userId
      * друга с id == friendId
      */
-    void saveFriend(int userId, int friendId);
+    void saveFriend(Long userId, Long friendId);
 
     /**
      * Удалить у пользователя с id == userId
      * друга с id == friendId
      */
-    void deleteFriend(int userId, int friendId);
+    void deleteFriend(Long userId, Long friendId);
 
     /**
      * Получить все друзей пользователя
      */
-    List<Integer> getFriendsByUserId(int userId);
+    List<Long> getFriendsByUserId(Long userId);
 
     /**
      * Проверка наличия записи в БД
      */
-    boolean containsInStorage(int filmId, int friendId);
+    boolean containsInStorage(Long filmId, Long friendId);
 }

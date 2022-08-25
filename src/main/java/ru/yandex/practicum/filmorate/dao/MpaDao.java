@@ -16,11 +16,11 @@ public interface MpaDao {
      * Получить MPA рейтинг по его id
      * из справочника
      */
-    Mpa getMpaById(int id);
+    Mpa getMpaById(Integer id);
 
     /**
      * Проверка наличия map
      * в справочнике по id
      */
-    boolean containsInStorage(int id);
+    boolean containsInStorage(Integer id);
 }

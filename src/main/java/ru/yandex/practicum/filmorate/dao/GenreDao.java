@@ -9,17 +9,13 @@ public interface GenreDao {
 
     /**
      * Записать все жанры к фильму в БД
-     * (использется в FilmService при
-     * сохранении и обновлении фильма)
      */
     void setGenre(Film film);
 
     /**
      * Получить все жанры фильма по его id
-     * (используется в FilmService
-     * при получении фильма или списка фильмов из БД)
      */
-    List<Genre> loadGenres(int id);
+    List<Genre> loadGenres(Long filmId);
 
     /**
      * Получить все жанры
@@ -30,11 +26,11 @@ public interface GenreDao {
     /**
      * Получить жарн по его id
      */
-    Genre getGenreById(int id);
+    Genre getGenreById(Integer id);
 
     /**
      * Проверить наличие жанра в справочнике БД
      * по его id
      */
-    boolean containsInStorage(int id);
+    boolean containsInStorage(Integer id);
 }

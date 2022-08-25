@@ -11,21 +11,21 @@ import java.util.List;
 @Service
 public class GenreService {
 
-    private final GenreDao genreDbStorage;
+    private final GenreDao genreDao;
 
     @Autowired
-    public GenreService(GenreDao genreDbStorage) {
-        this.genreDbStorage = genreDbStorage;
+    public GenreService(GenreDao genreDao) {
+        this.genreDao = genreDao;
     }
 
     public Genre getGenreById(Integer id) {
-        if (!genreDbStorage.containsInStorage(id)) {
+        if (!genreDao.containsInStorage(id)) {
             throw new NotFoundException("Genre with id = " + id + " not found");
         }
-        return genreDbStorage.getGenreById(id);
+        return genreDao.getGenreById(id);
     }
 
     public List<Genre> getAllGenres() {
-        return genreDbStorage.getAllGenres();
+        return genreDao.getAllGenres();
     }
 }

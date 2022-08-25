@@ -27,7 +27,7 @@ public class UserDbStorage implements UserDao {
 
     @Override
     public User save(User user) {
-        String sql = "INSERT INTO users (user_name, user_login, user_email, user_birthday) values (?, ?, ?, ?);";
+        String sql = "INSERT INTO users (user_name, user_login, user_email, user_birthday) values (?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement stmt = connection.prepareStatement(sql, new String[]{"user_id"});
@@ -37,7 +37,7 @@ public class UserDbStorage implements UserDao {
             stmt.setDate(4, Date.valueOf(user.getBirthday()));
             return stmt;
         }, keyHolder);
-        Integer userId = Objects.requireNonNull(keyHolder.getKey()).intValue();
+        Long userId = Objects.requireNonNull(keyHolder.getKey()).longValue();
         user.setId(userId);
         return user;
     }
@@ -45,7 +45,7 @@ public class UserDbStorage implements UserDao {
     @Override
     public User update(User user) {
         String sqlQuery = "UPDATE users SET user_name = ?, user_login = ?, user_email = ?, user_birthday = ? " +
-                "WHERE user_id = ?;";
+                "WHERE user_id = ?";
         jdbcTemplate.update(sqlQuery
                 , user.getName()
                 , user.getLogin()
@@ -57,33 +57,39 @@ public class UserDbStorage implements UserDao {
 
     @Override
     public boolean delete(User user) {
-        String sqlQuery = "DELETE FROM users WHERE user_id = ?;";
+        String sqlQuery = "DELETE FROM users WHERE user_id = ?";
         return jdbcTemplate.update(sqlQuery, user.getId()) > 0;
     }
 
     @Override
     public List<User> getAllUsers() {
-        String sqlQuery = "SELECT user_id, user_name, user_login, user_email, user_birthday FROM users;";
+        String sqlQuery = "SELECT user_id, user_name, user_login, user_email, user_birthday FROM users";
         return jdbcTemplate.query(sqlQuery, this::mapRowToUser);
     }
 
     @Override
-    public User getUserById(int userId) {
+    public User getUserById(Long userId) {
         String sqlQuery = "SELECT user_id, user_name, user_login, user_email, user_birthday " +
-                "FROM users WHERE user_id = ?;";
+                "FROM users WHERE user_id = ?";
         return jdbcTemplate.queryForObject(sqlQuery, this::mapRowToUser, userId);
     }
 
     @Override
-    public boolean containsInStorage(int userId) {
-        String sqlQuery = "SELECT count(*) FROM users WHERE user_id = ?;";
+    public boolean containsInStorage(Long userId) {
+        String sqlQuery = "SELECT count(*) FROM users WHERE user_id = ?";
         int result = jdbcTemplate.queryForObject(sqlQuery, Integer.class, userId);
         return result == 1;
     }
 
+    @Override
+    public void deleteUserById(Long userId) {
+        String sql = "DELETE FROM users WHERE user_id = ?";
+        jdbcTemplate.update(sql, userId);
+    }
+
     private User mapRowToUser(ResultSet resultSet, int rowNum) throws SQLException {
         return User.builder()
-                .id(resultSet.getInt("user_id"))
+                .id(resultSet.getLong("user_id"))
                 .name(resultSet.getString("user_name"))
                 .login(resultSet.getString("user_login"))
                 .email(resultSet.getString("user_email"))
