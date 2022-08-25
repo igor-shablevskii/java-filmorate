@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dao.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.*;
 
 import java.util.*;
@@ -19,6 +18,7 @@ public class FilmService {
     private final LikeDao likeDao;
     private final DirectorDao directorDao;
     private final FeedDao feedDao;
+    private final MarkDao markDao;
 
     @Autowired
     public FilmService(FilmDao filmDao,
@@ -26,13 +26,14 @@ public class FilmService {
                        GenreDao genreDao,
                        LikeDao likeDao,
                        DirectorDao directorDao,
-                       FeedDao feedDao) {
+                       FeedDao feedDao, MarkDao markDao) {
         this.filmDao = filmDao;
         this.userDao = userDao;
         this.genreDao = genreDao;
         this.likeDao = likeDao;
         this.directorDao = directorDao;
         this.feedDao = feedDao;
+        this.markDao = markDao;
     }
 
     public Film create(Film film) {
@@ -80,6 +81,33 @@ public class FilmService {
         feedDao.create(new Feed(userId, EventType.LIKE, Operation.REMOVE, filmId));
     }
 
+    public void saveMark(Long filmId, Long userId, Byte mark) {
+        isFilmExists(filmId);
+        isUserExists(userId);
+        feedDao.create(new Feed(userId, EventType.MARK, Operation.ADD, filmId));
+        if (markDao.containsInStorage(filmId, userId)) {
+            return;
+        }
+        markDao.save(filmId, userId, mark);
+    }
+
+    public void updateMark(Long filmId, Long userId, Byte mark) {
+        isFilmExists(filmId);
+        isUserExists(userId);
+        feedDao.create(new Feed(userId, EventType.MARK, Operation.UPDATE, filmId));
+        if (markDao.containsInStorage(filmId, userId)) {
+            return;
+        }
+        markDao.update(filmId, userId, mark);
+    }
+
+    public void deleteMark(Long filmId, Long userId) {
+        isFilmExists(filmId);
+        isUserExists(userId);
+        markDao.remove(filmId, userId);
+        feedDao.create(new Feed(userId, EventType.MARK, Operation.REMOVE, filmId));
+    }
+
     public List<Film> getPopularFilms(Integer count, Integer genreId, Integer yearId) {
         List<Film> popularFilms;
         if (genreId != null && yearId != null) {
@@ -93,7 +121,7 @@ public class FilmService {
         }
         return addGenresAndDirectors(popularFilms)
                 .stream()
-                .sorted(Comparator.comparingInt(Film::getRate).reversed())
+                .sorted(Comparator.comparingDouble(Film::getRate).reversed())
                 .collect(Collectors.toList());
     }
 

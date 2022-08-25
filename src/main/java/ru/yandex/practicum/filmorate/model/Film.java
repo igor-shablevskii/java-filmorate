@@ -35,5 +35,5 @@ public class Film {
     @NotNull
     private Mpa mpa;
     @JsonIgnore
-    private Integer rate = 0;
+    private Float rate = 0f;
 }

@@ -36,7 +36,7 @@ public class FilmDbStorage implements FilmDao {
             stmt.setString(2, film.getDescription());
             stmt.setDate(3, Date.valueOf(film.getReleaseDate()));
             stmt.setInt(4, film.getDuration());
-            stmt.setInt(5, film.getRate());
+            stmt.setFloat(5, film.getRate());
             stmt.setInt(6, film.getMpa().getId());
             return stmt;
         }, keyHolder);
@@ -100,7 +100,7 @@ public class FilmDbStorage implements FilmDao {
                 "mr.mpa_name " +
                 "FROM films f " +
                 "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
-                "ORDER BY rate DESC " +
+                "ORDER BY f.rate DESC " +
                 "LIMIT ?";
         return jdbcTemplate.query(sql, this::mapRowToFilm, count);
     }
@@ -115,7 +115,7 @@ public class FilmDbStorage implements FilmDao {
                 "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
                 "LEFT JOIN film_genre fr ON f.film_id = fr.film_id " +
                 "WHERE genre_id = ? AND YEAR(film_releaseDate) = ? " +
-                "ORDER BY rate DESC " +
+                "ORDER BY f.rate DESC " +
                 "LIMIT ?";
         return jdbcTemplate.query(sql, this::mapRowToFilm, genreId, year, count);
     }
@@ -130,7 +130,7 @@ public class FilmDbStorage implements FilmDao {
                 "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
                 "LEFT JOIN film_genre fr ON f.film_id = fr.film_id " +
                 "WHERE genre_id = ? " +
-                "ORDER BY rate DESC " +
+                "ORDER BY f.rate DESC " +
                 "LIMIT ?";
         return jdbcTemplate.query(sql, this::mapRowToFilm, genreId, count);
     }
@@ -143,7 +143,7 @@ public class FilmDbStorage implements FilmDao {
                 "FROM films f " +
                 "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
                 "WHERE YEAR(film_releaseDate) = ?" +
-                "ORDER BY rate DESC " +
+                "ORDER BY f.rate DESC " +
                 "LIMIT ?";
         return jdbcTemplate.query(sql, this::mapRowToFilm, year, count);
     }
@@ -168,7 +168,7 @@ public class FilmDbStorage implements FilmDao {
                 "EXCEPT SELECT film_id FROM film_likes WHERE user_id = ?) " +
                 "SELECT films.*, mpa_ratings.mpa_name FROM film_id_recommend " +
                 "LEFT JOIN films ON film_id_recommend.film_id = films.film_id " +
-                "LEFT JOIN mpa_ratings ON films.mpa_id = mpa_ratings.mpa_id ";
+                "LEFT JOIN mpa_ratings ON films.mpa_id = mpa_ratings.mpa_id";
 
         return jdbcTemplate.query(sql, this::mapRowToFilm, userId, userId, userId, userId, userId);
     }
@@ -185,7 +185,6 @@ public class FilmDbStorage implements FilmDao {
                 "mr.mpa_name " +
                 "FROM films f " +
                 "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
-                "LEFT JOIN common_films ON common_films.film_id = f.film_id " +
                 "WHERE f.film_id IN (common_films.film_id) "+
                 "ORDER BY rate";
 
@@ -219,7 +218,6 @@ public class FilmDbStorage implements FilmDao {
                 "LEFT JOIN films f ON fd.film_id = f.film_id " +
                 "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
                 "WHERE LOWER(d.director_name) LIKE LOWER(?) " +
-                "GROUP BY f.film_id " +
                 "ORDER BY f.rate DESC";
         return jdbcTemplate.query(sql, this::mapRowToFilm, "%" + query + "%");
     }
@@ -234,7 +232,6 @@ public class FilmDbStorage implements FilmDao {
                 "LEFT JOIN directors d ON fd.director_id = d.director_id " +
                 "WHERE LOWER(f.film_name) LIKE LOWER(?) " +
                 "OR LOWER(d.director_name) LIKE LOWER(?) " +
-                "GROUP BY f.film_id " +
                 "ORDER BY f.rate DESC";
         final String queryString = "%" + query + "%";
         return jdbcTemplate.query(sql, this::mapRowToFilm, queryString, queryString);
@@ -246,7 +243,7 @@ public class FilmDbStorage implements FilmDao {
                 .name(rs.getString("film_name"))
                 .description(rs.getString("film_description"))
                 .releaseDate(rs.getDate("film_releaseDate").toLocalDate())
-                .rate(rs.getInt("rate"))
+                .rate(rs.getFloat("rate"))
                 .duration(rs.getInt("film_duration"))
                 .mpa(new Mpa(
                         rs.getInt("mpa_id"),

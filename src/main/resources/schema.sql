@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS films
     film_releaseDate date         NOT NULL,
     film_duration    INTEGER      NOT NULL,
     mpa_id           INTEGER REFERENCES mpa_ratings (mpa_id),
-    rate             INTEGER      NOT NULL
+    rate             REAL      NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS film_genre
@@ -54,6 +54,14 @@ CREATE TABLE IF NOT EXISTS film_likes
 (
     film_id LONG REFERENCES films (film_id) ON DELETE CASCADE,
     user_id LONG REFERENCES users (user_id) ON DELETE CASCADE,
+    PRIMARY KEY (film_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS film_marks
+(
+    film_id LONG REFERENCES films (film_id) ON DELETE CASCADE,
+    user_id LONG REFERENCES users (user_id) ON DELETE CASCADE,
+    mark TINYINT,
     PRIMARY KEY (film_id, user_id)
 );
 
