@@ -95,9 +95,6 @@ public class FilmService {
         isFilmExists(filmId);
         isUserExists(userId);
         feedDao.create(new Feed(userId, EventType.MARK, Operation.UPDATE, filmId));
-        if (markDao.containsInStorage(filmId, userId)) {
-            return;
-        }
         markDao.update(filmId, userId, mark);
     }
 
