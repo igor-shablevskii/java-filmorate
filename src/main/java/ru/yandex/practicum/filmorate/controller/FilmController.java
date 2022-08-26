@@ -58,18 +58,6 @@ public class FilmController {
         return film;
     }
 
-    @PutMapping("/{filmId}/like/{userId}")
-    public void addLike(@PathVariable Long filmId, @PathVariable Long userId) {
-        log.info("Added like film id = {} user id = {}", filmId, userId);
-        filmService.saveLike(filmId, userId);
-    }
-
-    @DeleteMapping("{filmId}/like/{userId}")
-    public void deleteLike(@PathVariable Long filmId, @PathVariable Long userId) {
-        log.info("Delete like film id = {} user id = {}", filmId, userId);
-        filmService.deleteLike(filmId, userId);
-    }
-
     @GetMapping("/popular")
     public List<Film> getPopularFilms(@RequestParam(defaultValue = "10") @Positive Integer count,
                                       @RequestParam(required = false) Integer genreId,
@@ -95,8 +83,9 @@ public class FilmController {
     }
 
     @GetMapping(value = "/director/{directorId}")
-    public List<Film> getSortedFilmsByDirector(@PathVariable Long directorId, @RequestParam("sortBy") FilmSortBy sortBy) {
-        return filmService.getSortedFilmsByDirectors(directorId, sortBy);
+    public List<Film> getSortedFilmsByDirector(@PathVariable Long directorId,
+                                               @RequestParam("sortBy") FilmSortBy sortBy) {
+        return filmService.getSortedDirectorsFilms(directorId, sortBy);
     }
 
     @GetMapping("/search")

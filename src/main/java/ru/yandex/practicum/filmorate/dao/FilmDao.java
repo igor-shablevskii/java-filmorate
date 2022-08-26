@@ -27,6 +27,24 @@ public interface FilmDao {
     Film getFilmById(Long filmId);
 
     /**
+     * Получить список фильмов режиссёра
+     * отсортированных по лайкам
+     */
+    List<Film> getSortedDirectorsFilmsByLikes(Long directorId);
+
+    /**
+     * Получить список фильмов режиссёра
+     * отсортированных по оценкам
+     */
+    List<Film> getSortedDirectorsFilmsByMarks(Long directorId);
+
+    /**
+     * Получить список фильмов режиссёра
+     * отсортированных по году релиза
+     */
+    List<Film> getSortedDirectorsFilmsByYears(Long directorId);
+
+    /**
      * Получить список фильмов
      * отсортированных по количеству лайков
      * пользователей по desc
@@ -48,12 +66,6 @@ public interface FilmDao {
      * Удалить фильм по id
      */
     void deleteFilmById(Long filmId);
-
-    /**
-     * Получить список фильмов режиссёра
-     * отсортированных по типу sortBy
-     */
-    List<Film> getSortedFilmsByDirectors(Long directorId);
 
     /**
      * Получить список фильмов

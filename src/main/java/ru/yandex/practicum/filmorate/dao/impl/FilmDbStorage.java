@@ -82,14 +82,34 @@ public class FilmDbStorage implements FilmDao {
     }
 
     @Override
-    public List<Film> getSortedFilmsByDirectors(Long directorId) {
+    public List<Film> getSortedDirectorsFilmsByLikes(Long directorId) {
         String sql = "SELECT f.*, mr.mpa_name FROM films f " +
                 "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
                 "LEFT JOIN film_likes fl ON f.film_id = fl.film_id " +
                 "LEFT JOIN film_director fd ON f.FILM_ID = fd.FILM_ID " +
                 "WHERE fd.director_id = ? " +
-                "GROUP BY fd.film_id " +
                 "ORDER BY count(DISTINCT fl.user_id) DESC";
+        return jdbcTemplate.query(sql, this::mapRowToFilm, directorId);
+    }
+
+    @Override
+    public List<Film> getSortedDirectorsFilmsByMarks(Long directorId) {
+        String sql = "SELECT f.*, mr.mpa_name FROM films f " +
+                "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
+                "LEFT JOIN film_marks fl ON f.film_id = fl.film_id " +
+                "LEFT JOIN film_director fd ON f.film_id = fd.film_id " +
+                "WHERE fd.director_id = ? " +
+                "ORDER BY fl.mark DESC";
+        return jdbcTemplate.query(sql, this::mapRowToFilm, directorId);
+    }
+
+    @Override
+    public List<Film> getSortedDirectorsFilmsByYears(Long directorId) {
+        String sql = "SELECT f.*, mr.mpa_name FROM films f " +
+                "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
+                "LEFT JOIN film_director fd ON f.film_id = fd.film_id " +
+                "WHERE fd.director_id = ? " +
+                "ORDER BY YEAR(f.FILM_RELEASEDATE)";
         return jdbcTemplate.query(sql, this::mapRowToFilm, directorId);
     }
 
@@ -148,29 +168,23 @@ public class FilmDbStorage implements FilmDao {
         return jdbcTemplate.query(sql, this::mapRowToFilm, year, count);
     }
 
-    @Override
     public List<Film> getFilmRecommendations(Long userId) {
         String sql = "WITH film_id_recommend AS " +
-                "(SELECT film_id FROM film_likes WHERE user_id = " +
-                "(WITH likes_count AS (SELECT user_id, COUNT(film_id) AS l_count " +
-                "FROM film_likes GROUP BY user_id), " +
-                "common_likes AS (SELECT * FROM film_likes " +
-                "WHERE film_id IN (SELECT film_id FROM film_likes " +
-                "WHERE user_id = ? " +
-                "INTERSECT SELECT film_id FROM film_likes " +
-                "WHERE user_id <> ?)) " +
-                "SELECT common_likes.user_id FROM common_likes " +
-                "LEFT JOIN likes_count ON likes_count.user_id = common_likes.user_id " +
-                "GROUP BY common_likes.user_id " +
-                "HAVING MAX(common_likes.user_id <> ?) AND l_count > " +
-                "(SELECT COUNT(*) FROM common_likes " +
-                "WHERE user_id = ?)) " +
-                "EXCEPT SELECT film_id FROM film_likes WHERE user_id = ?) " +
+                "(SELECT film_id FROM film_marks WHERE user_id IN " +
+                "(SELECT fm2.user_id " +
+                "FROM film_marks fm1 " +
+                "JOIN film_marks fm2 ON fm2.film_id = fm1.film_id AND fm2.user_id != fm1.user_id " +
+                "WHERE fm1.user_id = ? AND fm1.mark > 5 AND fm2.mark > 5 " +
+                "GROUP BY fm2.user_id " +
+                "ORDER BY count(fm2.user_id) DESC " +
+                "LIMIT 5) AND mark > 5 " +
+                "EXCEPT SELECT film_id FROM film_marks WHERE user_id = ?) " +
                 "SELECT films.*, mpa_ratings.mpa_name FROM film_id_recommend " +
                 "LEFT JOIN films ON film_id_recommend.film_id = films.film_id " +
-                "LEFT JOIN mpa_ratings ON films.mpa_id = mpa_ratings.mpa_id";
+                "LEFT JOIN mpa_ratings ON films.mpa_id = mpa_ratings.mpa_id " +
+                "ORDER BY films.rate";
 
-        return jdbcTemplate.query(sql, this::mapRowToFilm, userId, userId, userId, userId, userId);
+        return jdbcTemplate.query(sql, this::mapRowToFilm, userId, userId);
     }
 
     @Override

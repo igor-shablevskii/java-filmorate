@@ -122,14 +122,15 @@ public class FilmService {
                 .collect(Collectors.toList());
     }
 
-    public List<Film> getSortedFilmsByDirectors(Long directorId, FilmSortBy sortBy) {
+    public List<Film> getSortedDirectorsFilms(Long directorId, FilmSortBy sortBy) {
         isDirectorExists(directorId);
-        List<Film> films = filmDao.getSortedFilmsByDirectors(directorId);
+        List<Film> films;
         if (sortBy.equals(FilmSortBy.YEAR)) {
-            return addGenresAndDirectors(films)
-                    .stream()
-                    .sorted(Comparator.comparing(Film::getReleaseDate))
-                    .collect(Collectors.toList());
+            films = filmDao.getSortedDirectorsFilmsByYears(directorId);
+        } else if (sortBy.equals(FilmSortBy.MARKS)) {
+            films = filmDao.getSortedDirectorsFilmsByMarks(directorId);
+        } else {
+            films = filmDao.getSortedDirectorsFilmsByLikes(directorId);
         }
         return addGenresAndDirectors(films);
     }

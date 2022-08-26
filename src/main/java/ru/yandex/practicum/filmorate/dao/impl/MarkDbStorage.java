@@ -45,7 +45,8 @@ public class MarkDbStorage implements MarkDao {
 
     private void updateRate(Long filmId) {
         String sqlQuery = "UPDATE films f " +
-                "SET f.rate = (SELECT CAST(avg(mark) AS REAL) FROM film_marks fm WHERE fm.film_id = ?) " +
+                "SET f.rate = COALESCE((SELECT CAST(avg(mark) AS REAL) FROM film_marks fm " +
+                "WHERE fm.film_id = ?), 0) " +
                 "WHERE f.film_id = ?";
         jdbcTemplate.update(sqlQuery, filmId, filmId);
     }

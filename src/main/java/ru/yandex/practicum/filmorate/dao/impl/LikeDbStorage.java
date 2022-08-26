@@ -21,14 +21,12 @@ public class LikeDbStorage implements LikeDao {
     public void saveLike(Long filmId, Long userId) {
         String sql = "INSERT INTO film_likes (film_id, user_id) VALUES (?, ?)";
         jdbcTemplate.update(sql, filmId, userId);
-        //updateRate(filmId);
     }
 
     @Override
     public void deleteLike(Long filmId, Long userId) {
         String sql = "DELETE FROM film_likes WHERE film_id = ? AND user_id = ?";
         jdbcTemplate.update(sql, filmId, userId);
-        //updateRate(filmId);
     }
 
     @Override
@@ -49,14 +47,4 @@ public class LikeDbStorage implements LikeDao {
         int result = jdbcTemplate.queryForObject(sqlQuery, Integer.class, filmId, userId);
         return result == 1;
     }
-
-//    private void updateRate(Long filmId) {
-//        String sqlQuery = "UPDATE films f " +
-//                "SET rate = (SELECT count(l.user_id) FROM film_likes l, users u " +
-//                "WHERE l.film_id = f.film_id " +
-//                "AND l.USER_ID = u.USER_ID " +
-//                "AND film_id = ?) " +
-//                "WHERE f.FILM_ID = ?";
-//        jdbcTemplate.update(sqlQuery, filmId, filmId);
-//    }
 }

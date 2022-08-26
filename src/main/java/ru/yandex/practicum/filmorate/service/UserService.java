@@ -83,16 +83,12 @@ public class UserService {
     }
 
     public List<Film> getFilmRecommendations(Long userId) {
-        if (!userDao.containsInStorage(userId)) {
-            throw new NotFoundException("User with id = " + userId + " not found");
-        }
+        isUserExists(userId);
         return filmDao.getFilmRecommendations(userId);
     }
 
     public void deleteUserById(Long userId) {
-        if (!userDao.containsInStorage(userId)) {
-            throw new NotFoundException("User with id = " + userId + " not found");
-        }
+        isUserExists(userId);
         userDao.deleteUserById(userId);
     }
 
