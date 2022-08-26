@@ -88,6 +88,7 @@ public class FilmDbStorage implements FilmDao {
                 "LEFT JOIN film_likes fl ON f.film_id = fl.film_id " +
                 "LEFT JOIN film_director fd ON f.FILM_ID = fd.FILM_ID " +
                 "WHERE fd.director_id = ? " +
+                "GROUP BY f.film_id " +
                 "ORDER BY count(DISTINCT fl.user_id) DESC";
         return jdbcTemplate.query(sql, this::mapRowToFilm, directorId);
     }
@@ -98,8 +99,9 @@ public class FilmDbStorage implements FilmDao {
                 "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
                 "LEFT JOIN film_marks fl ON f.film_id = fl.film_id " +
                 "LEFT JOIN film_director fd ON f.film_id = fd.film_id " +
-                "WHERE fd.director_id = ? " +
-                "ORDER BY fl.mark DESC";
+                "WHERE fd.director_id = ? AND fl.mark > 5 " +
+                "GROUP BY f.film_id " +
+                "ORDER BY count(DISTINCT fl.user_id) DESC";
         return jdbcTemplate.query(sql, this::mapRowToFilm, directorId);
     }
 
@@ -115,8 +117,7 @@ public class FilmDbStorage implements FilmDao {
 
     @Override
     public List<Film> getPopularFilms(Integer count) {
-        String sql = "SELECT " +
-                "*, " +
+        String sql = "SELECT *, " +
                 "mr.mpa_name " +
                 "FROM films f " +
                 "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
@@ -127,8 +128,7 @@ public class FilmDbStorage implements FilmDao {
 
     @Override
     public List<Film> getPopularFilmsByGenreAndYear(Integer count, Integer genreId, Integer year) {
-        String sql = "SELECT " +
-                "*, " +
+        String sql = "SELECT *, " +
                 "mr.mpa_name, " +
                 "fr.genre_id " +
                 "FROM films f " +
@@ -142,8 +142,7 @@ public class FilmDbStorage implements FilmDao {
 
     @Override
     public List<Film> getPopularFilmsByGenre(Integer count, Integer genreId) {
-        String sql = "SELECT " +
-                "*, " +
+        String sql = "SELECT *, " +
                 "mr.mpa_name, " +
                 "fr.genre_id " +
                 "FROM films f " +
@@ -157,8 +156,7 @@ public class FilmDbStorage implements FilmDao {
 
     @Override
     public List<Film> getPopularFilmsByYear(Integer count, Integer year) {
-        String sql = "SELECT " +
-                "*, " +
+        String sql = "SELECT *, " +
                 "mr.mpa_name " +
                 "FROM films f " +
                 "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
@@ -168,6 +166,7 @@ public class FilmDbStorage implements FilmDao {
         return jdbcTemplate.query(sql, this::mapRowToFilm, year, count);
     }
 
+    @Override
     public List<Film> getFilmRecommendations(Long userId) {
         String sql = "WITH film_id_recommend AS " +
                 "(SELECT film_id FROM film_marks WHERE user_id IN " +
@@ -187,19 +186,18 @@ public class FilmDbStorage implements FilmDao {
         return jdbcTemplate.query(sql, this::mapRowToFilm, userId, userId);
     }
 
+
     @Override
     public List<Film> getUsersCommonFilms(Long userId, Long otherUserId) {
-        String sql = "WITH common_films AS " +
-                "(SELECT likes.film_id FROM film_likes AS likes " +
-                "WHERE likes.user_id = ? " +
-                "INTERSECT SELECT likes.film_id " +
-                "FROM film_likes AS likes " +
-                "WHERE likes.user_id = ?) " +
-                "SELECT *, " +
+        String sql = "SELECT *, " +
                 "mr.mpa_name " +
                 "FROM films f " +
                 "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
-                "WHERE f.film_id IN (common_films.film_id) "+
+                "WHERE f.film_id IN " +
+                "(SELECT film_id FROM (SELECT film_id FROM " +
+                "film_marks WHERE user_id = ? AND mark > 5 " +
+                "INTERSECT SELECT film_id FROM film_marks " +
+                "WHERE user_id = ? AND mark > 5)) "+
                 "ORDER BY rate";
 
         return jdbcTemplate.query(sql, this::mapRowToFilm, userId, otherUserId);
