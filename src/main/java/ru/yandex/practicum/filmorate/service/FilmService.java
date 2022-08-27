@@ -47,7 +47,7 @@ public class FilmService {
         isFilmExists(film.getId());
         Film updatedFilm = filmDao.update(film);
         genreDao.setGenre(updatedFilm);
-        directorDao.setDirector(updatedFilm);
+        directorDao.setDirector(film);
         return updatedFilm;
     }
 

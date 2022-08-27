@@ -88,8 +88,7 @@ public class FilmDbStorage implements FilmDao {
                 "LEFT JOIN film_likes fl ON f.film_id = fl.film_id " +
                 "LEFT JOIN film_director fd ON f.FILM_ID = fd.FILM_ID " +
                 "WHERE fd.director_id = ? " +
-                "GROUP BY f.film_id " +
-                "ORDER BY count(DISTINCT fl.user_id) DESC";
+                "ORDER BY f.rate";
         return jdbcTemplate.query(sql, this::mapRowToFilm, directorId);
     }
 
@@ -100,8 +99,7 @@ public class FilmDbStorage implements FilmDao {
                 "LEFT JOIN film_marks fl ON f.film_id = fl.film_id " +
                 "LEFT JOIN film_director fd ON f.film_id = fd.film_id " +
                 "WHERE fd.director_id = ? AND fl.mark > 5 " +
-                "GROUP BY f.film_id " +
-                "ORDER BY count(DISTINCT fl.user_id) DESC";
+                "ORDER BY f.rate";
         return jdbcTemplate.query(sql, this::mapRowToFilm, directorId);
     }
 
@@ -185,7 +183,6 @@ public class FilmDbStorage implements FilmDao {
 
         return jdbcTemplate.query(sql, this::mapRowToFilm, userId, userId);
     }
-
 
     @Override
     public List<Film> getUsersCommonFilms(Long userId, Long otherUserId) {
