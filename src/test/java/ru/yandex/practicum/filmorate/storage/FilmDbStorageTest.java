@@ -1,15 +1,19 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import ru.yandex.practicum.filmorate.dao.MarkDao;
-import ru.yandex.practicum.filmorate.dao.impl.FilmDbStorage;
-import ru.yandex.practicum.filmorate.dao.impl.UserDbStorage;
-import ru.yandex.practicum.filmorate.model.*;
+import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -18,99 +22,217 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @SpringBootTest
 @AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class FilmDbStorageTest {
 
-    private final FilmDbStorage filmDbStorage;
-    private final UserDbStorage userDbStorage;
-    private final MarkDao markDbStorage;
+    private final UserService userService;
+    private final FilmService filmService;
 
     @Order(1)
     @Test
     public void getFilmRecommendationsTest() {
         User user1 = new User(1L, "Name1", "loginUser1", "emailUser1@mail.ru",
                 LocalDate.of(1996, 1, 28));
-        userDbStorage.save(user1);
+        userService.save(user1);
         User user2 = new User(2L, "Name2", "loginUser2", "emailUser2@mail.ru",
                 LocalDate.of(1997, 9, 7));
-        userDbStorage.save(user2);
+        userService.save(user2);
         User user3 = new User(3L, "Name3", "loginUser3", "emailUser3@mail.ru",
                 LocalDate.of(1997, 9, 7));
-        userDbStorage.save(user3);
+        userService.save(user3);
         Film film1 = new Film(1L, "Название фильма", "Описание фильма",
                 LocalDate.of(1976, 11, 21), 119,
                 new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"), new Genre(6, "Боевик"))),
-                new HashSet<>(Set.of(new Director((long) 1, "Спилберг"))), new Mpa(1, "G"),
+                new HashSet<>(), new Mpa(1, "G"),
                 0.0F);
-        filmDbStorage.save(film1);
+        filmService.create(film1);
         Film film2 = new Film(2L, "Название фильма2", "Описание фильма2",
                 LocalDate.of(1976, 11, 21), 119,
                 new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"), new Genre(6, "Боевик"))),
-                new HashSet<>(Set.of(new Director((long) 1, "Спилберг"))), new Mpa(1, "G"),
+                new HashSet<>(), new Mpa(1, "G"),
                 0.0F);
-        filmDbStorage.save(film2);
+        filmService.create(film2);
         Film film3 = new Film(3L, "Название фильма3", "Описание фильма3",
                 LocalDate.of(1976, 11, 21), 119,
                 new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"), new Genre(6, "Боевик"))),
-                new HashSet<>(Set.of(new Director((long) 1, "Спилберг"))), new Mpa(1, "G"),
+                new HashSet<>(), new Mpa(1, "G"),
                 0.0F);
-        filmDbStorage.save(film3);
+        filmService.create(film3);
 
-        markDbStorage.save(film1.getId(), user1.getId(), (byte) 10);
-        markDbStorage.save(film1.getId(), user2.getId(), (byte) 10);
-        markDbStorage.save(film1.getId(), user3.getId(), (byte) 3);
-        markDbStorage.save(film2.getId(), user2.getId(), (byte) 10);
-        markDbStorage.save(film2.getId(), user3.getId(), (byte) 2);
-        markDbStorage.save(film3.getId(), user2.getId(), (byte) 10);
+        filmService.saveMark(film1.getId(), user1.getId(), (byte) 10);
+        filmService.saveMark(film1.getId(), user2.getId(), (byte) 10);
+        filmService.saveMark(film1.getId(), user3.getId(), (byte) 3);
+        filmService.saveMark(film2.getId(), user2.getId(), (byte) 10);
+        filmService.saveMark(film2.getId(), user3.getId(), (byte) 2);
+        filmService.saveMark(film3.getId(), user2.getId(), (byte) 10);
 
-        assertThat(filmDbStorage.getFilmById(1L).getRate()).isGreaterThan(0F);
-        assertThat(filmDbStorage.getFilmById(2L).getRate()).isGreaterThan(0F);
-        assertThat(filmDbStorage.getFilmById(3L).getRate()).isGreaterThan(0F);
+        assertThat(filmService.getFilmById(1L).getRate()).isGreaterThan(0F);
+        assertThat(filmService.getFilmById(2L).getRate()).isGreaterThan(0F);
+        assertThat(filmService.getFilmById(3L).getRate()).isGreaterThan(0F);
 
-        assertThat(filmDbStorage.getFilmRecommendations(user1.getId())).contains(film2).contains(film3);
+        assertThat(filmService.getFilmRecommendations(user1.getId()))
+                .contains(film2).contains(film3).doesNotContain(film1);
 
     }
 
     @Order(2)
     @Test
-    public void getUSerCommonFilmsTest() {
+    public void getUserCommonFilmsTest() {
         User user4 = new User(4L, "Name4", "loginUser4", "emailUser4@mail.ru",
                 LocalDate.of(1996, 1, 28));
-        userDbStorage.save(user4);
+        userService.save(user4);
         User user5 = new User(5L, "Name5", "loginUser5", "emailUser5@mail.ru",
                 LocalDate.of(1997, 9, 7));
-        userDbStorage.save(user5);
+        userService.save(user5);
 
         Film film4 = new Film(4L, "Название фильма4", "Описание фильма4",
                 LocalDate.of(1976, 11, 21), 119,
                 new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"), new Genre(6, "Боевик"))),
-                new HashSet<>(Set.of(new Director((long) 1, "Спилберг"))), new Mpa(1, "G"),
+                new HashSet<>(), new Mpa(1, "G"),
                 0.0F);
-        filmDbStorage.save(film4);
+        filmService.create(film4);
         Film film5 = new Film(5L, "Название фильма5", "Описание фильма5",
                 LocalDate.of(1976, 11, 21), 119,
                 new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"), new Genre(6, "Боевик"))),
-                new HashSet<>(Set.of(new Director((long) 1, "Спилберг"))), new Mpa(1, "G"),
+                new HashSet<>(), new Mpa(1, "G"),
                 0.0F);
-        filmDbStorage.save(film5);
+        filmService.create(film5);
         Film film6 = new Film(6L, "Название фильма6", "Описание фильма6",
                 LocalDate.of(1976, 11, 21), 119,
                 new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"), new Genre(6, "Боевик"))),
-                new HashSet<>(Set.of(new Director((long) 1, "Спилберг"))), new Mpa(1, "G"),
+                new HashSet<>(), new Mpa(1, "G"),
                 0.0F);
-        filmDbStorage.save(film6);
+        filmService.create(film6);
 
-        markDbStorage.save(film4.getId(), user4.getId(), (byte) 10);
-        markDbStorage.save(film4.getId(), user5.getId(), (byte) 10);
-        markDbStorage.save(film5.getId(), user4.getId(), (byte) 3);
-        markDbStorage.save(film5.getId(), user5.getId(), (byte) 9);
-        markDbStorage.save(film6.getId(), user4.getId(), (byte) 8);
-        markDbStorage.save(film6.getId(), user5.getId(), (byte) 7);
+        filmService.saveMark(film4.getId(), user4.getId(), (byte) 10);
+        filmService.saveMark(film4.getId(), user5.getId(), (byte) 10);
+        filmService.saveMark(film5.getId(), user4.getId(), (byte) 3);
+        filmService.saveMark(film5.getId(), user5.getId(), (byte) 9);
+        filmService.saveMark(film6.getId(), user4.getId(), (byte) 8);
+        filmService.saveMark(film6.getId(), user5.getId(), (byte) 7);
 
-        assertThat(filmDbStorage.getUsersCommonFilms(user4.getId(), user5.getId()))
+        assertThat(filmService.getUsersCommonFilms(user4.getId(), user5.getId()))
                 .contains(film4).contains(film6).doesNotContain(film5);
 
+    }
+
+    @Order(3)
+    @Test
+    public void getPopularFilmsByGenreTest() {
+
+        User user6 = new User(6L, "Name6", "loginUser6", "emailUser6@mail.ru",
+                LocalDate.of(1996, 1, 28));
+        userService.save(user6);
+        User user7 = new User(7L, "Name7", "loginUser7", "emailUser7@mail.ru",
+                LocalDate.of(1997, 9, 7));
+        userService.save(user7);
+
+        Film film7 = new Film(7L, "Название фильма7", "Описание фильма7",
+                LocalDate.of(1990, 11, 21), 119,
+                new LinkedHashSet<>(Set.of(new Genre(6, "Боевик"))),
+                new HashSet<>(), new Mpa(1, "G"),
+                0.0F);
+        filmService.create(film7);
+        Film film8 = new Film(8L, "Название фильма8", "Описание фильма8",
+                LocalDate.of(1985, 11, 21), 119,
+                new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"))),
+                new HashSet<>(), new Mpa(1, "G"),
+                0.0F);
+        filmService.create(film8);
+        Film film9 = new Film(9L, "Название фильма9", "Описание фильма9",
+                LocalDate.of(1985, 11, 21), 119,
+                new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"), new Genre(6, "Боевик"))),
+                new HashSet<>(), new Mpa(1, "G"),
+                0.0F);
+        filmService.create(film9);
+
+        filmService.saveMark(film7.getId(), user6.getId(), (byte) 8);
+        filmService.saveMark(film8.getId(), user6.getId(), (byte) 9);
+        filmService.saveMark(film8.getId(), user7.getId(), (byte) 10);
+        filmService.saveMark(film9.getId(), user7.getId(), (byte) 10);
+
+        assertThat(filmService.getPopularFilms(5, 6, null))
+                .contains(film7).contains(film9).doesNotContain(film8);
+    }
+
+    @Order(4)
+    @Test
+    public void getPopularFilmsByYearTest() {
+
+        User user8 = new User(8L, "Name8", "loginUser8", "emailUser8@mail.ru",
+                LocalDate.of(1996, 1, 28));
+        userService.save(user8);
+        User user9 = new User(9L, "Name9", "loginUser9", "emailUser9@mail.ru",
+                LocalDate.of(1997, 9, 7));
+        userService.save(user9);
+
+        Film film10 = new Film(10L, "Название фильма10", "Описание фильма10",
+                LocalDate.of(1990, 11, 21), 119,
+                new LinkedHashSet<>(Set.of(new Genre(6, "Боевик"))),
+                new HashSet<>(), new Mpa(1, "G"),
+                0.0F);
+        filmService.create(film10);
+        Film film11 = new Film(11L, "Название фильм10", "Описание фильма10",
+                LocalDate.of(1985, 11, 21), 119,
+                new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"))),
+                new HashSet<>(), new Mpa(1, "G"),
+                0.0F);
+        filmService.create(film11);
+        Film film12 = new Film(12L, "Название фильма11", "Описание фильма11",
+                LocalDate.of(1985, 11, 21), 119,
+                new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"), new Genre(6, "Боевик"))),
+                new HashSet<>(), new Mpa(1, "G"),
+                0.0F);
+        filmService.create(film12);
+
+        filmService.saveMark(film10.getId(), user8.getId(), (byte) 8);
+        filmService.saveMark(film10.getId(), user9.getId(), (byte) 9);
+        filmService.saveMark(film11.getId(), user8.getId(), (byte) 10);
+        filmService.saveMark(film12.getId(), user9.getId(), (byte) 10);
+
+        assertThat(filmService.getPopularFilms(10, null, 1985))
+                .contains(film11).contains(film12).doesNotContain(film10);
+    }
+
+    @Order(5)
+    @Test
+    public void getPopularFilmsByGenreAndYearTest() {
+
+        User user10 = new User(10L, "Name10", "loginUser10", "emailUser10@mail.ru",
+                LocalDate.of(1996, 1, 28));
+        userService.save(user10);
+        User user11 = new User(11L, "Name11", "loginUser11", "emailUser11@mail.ru",
+                LocalDate.of(1997, 9, 7));
+        userService.save(user11);
+
+        Film film13 = new Film(13L, "Название фильма13", "Описание фильма13",
+                LocalDate.of(1985, 11, 21), 119,
+                new LinkedHashSet<>(Set.of(new Genre(6, "Боевик"))),
+                new HashSet<>(), new Mpa(1, "G"),
+                0.0F);
+        filmService.create(film13);
+        Film film14 = new Film(14L, "Название фильма14", "Описание фильма14",
+                LocalDate.of(1985, 11, 21), 119,
+                new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"))),
+                new HashSet<>(), new Mpa(1, "G"),
+                0.0F);
+        filmService.create(film14);
+        Film film15 = new Film(15L, "Название фильма15", "Описание фильма15",
+                LocalDate.of(1985, 11, 21), 119,
+                new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"), new Genre(6, "Боевик"))),
+                new HashSet<>(), new Mpa(1, "G"),
+                0.0F);
+        filmService.create(film15);
+
+        filmService.saveMark(film13.getId(), user10.getId(), (byte) 8);
+        filmService.saveMark(film14.getId(), user10.getId(), (byte) 9);
+        filmService.saveMark(film14.getId(), user11.getId(), (byte) 10);
+        filmService.saveMark(film15.getId(), user11.getId(), (byte) 10);
+
+        assertThat(filmService.getPopularFilms(10, 1, 1985))
+                .contains(film15).doesNotContain(film13);
     }
 }

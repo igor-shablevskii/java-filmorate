@@ -184,6 +184,7 @@ public class FilmDbStorage implements FilmDao {
         return jdbcTemplate.query(sql, this::mapRowToFilm, userId, userId);
     }
 
+
     @Override
     public List<Film> getUsersCommonFilms(Long userId, Long otherUserId) {
         String sql = "SELECT *, " +
