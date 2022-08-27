@@ -8,16 +8,15 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.*;
+import ru.yandex.practicum.filmorate.service.DirectorService;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,6 +29,7 @@ public class FilmDbStorageTest {
 
     private final UserService userService;
     private final FilmService filmService;
+    private final DirectorService directorService;
 
     @Order(1)
     @Test
@@ -235,4 +235,52 @@ public class FilmDbStorageTest {
         assertThat(filmService.getPopularFilms(10, 1, 1985))
                 .contains(film15).doesNotContain(film13);
     }
+
+    @Order(7)
+    @Test
+    public void searchFilmsTest() {
+        Director director20 = directorService.create(new Director(0L, "Владимир Иванов"));
+        Director director21 = directorService.create(new Director(0L, "Галина Боровикова"));
+        Director director22 = directorService.create(new Director(0L, "Таушева Иванов"));
+
+        Film film20 = new Film(0L, "Название фильма20777", "Описание фильма20",
+                LocalDate.of(1976, 11, 20), 20,
+                new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"), new Genre(6, "Боевик"))),
+                new HashSet<>(Set.of(director20)),
+                new Mpa(1, "G"),
+                0.0F);
+        filmService.create(film20);
+        Film film21 = new Film(0L, "Название фильма21", "Описание фильма21",
+                LocalDate.of(1976, 11, 21), 21,
+                new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"), new Genre(6, "Боевик"))),
+                new HashSet<>(Set.of(director21)),
+                new Mpa(1, "G"),
+                0.0F);
+        filmService.create(film21);
+        Film film22 = new Film(0L, "Малина22", "Описание фильма22",
+                LocalDate.of(1976, 11, 22), 22,
+                new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"), new Genre(6, "Боевик"))),
+                new HashSet<>(Set.of(director20, director22)),
+                new Mpa(1, "G"),
+                0.0F);
+        filmService.create(film22);
+
+        List<Film> resultByTitle = filmService.search("ильма20777", "TiTlE");
+        assertThat(resultByTitle.size()).isEqualTo(1);
+        assertThat("Название фильма20777").isEqualTo(resultByTitle.get(0).getName());
+        assertThat(resultByTitle).contains(film20);
+
+        List<Film> resultByDirector = filmService.search("ИВАно", "DiReCtOr");
+        assertThat(resultByDirector.size()).isEqualTo(2);
+        assertThat("Название фильма20777").isEqualTo(resultByDirector.get(0).getName());
+        assertThat("Малина22").isEqualTo(resultByDirector.get(1).getName());
+        assertThat(resultByDirector).contains(film20);
+        assertThat(resultByDirector).contains(film22);
+
+        List<Film> resultByTitleAndDirector = filmService.search("Алина", "dIrEcToR,tItLe");
+        assertThat(resultByTitleAndDirector.size()).isEqualTo(2);
+        assertThat("Название фильма21").isEqualTo(resultByTitleAndDirector.get(0).getName());
+        assertThat("Малина22").isEqualTo(resultByTitleAndDirector.get(1).getName());
+    }
+    
 }

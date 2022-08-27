@@ -221,7 +221,7 @@ public class FilmDbStorage implements FilmDao {
 
     @Override
     public List<Film> searchByDirectorOnly(String query) {
-        final String sql = "SELECT f.film_id, f.film_name, f.film_description, f.film_releasedate, f.film_duration, " +
+        final String sql = "SELECT distinct f.film_id, f.film_name, f.film_description, f.film_releasedate, f.film_duration, " +
                 "f.mpa_id, mr.mpa_name, f.rate " +
                 "FROM directors d " +
                 "LEFT JOIN film_director fd ON d.director_id = fd.director_id " +
@@ -234,7 +234,8 @@ public class FilmDbStorage implements FilmDao {
 
     @Override
     public List<Film> searchByTitleAndDirector(String query) {
-        final String sql = "SELECT f.film_id, f.film_name, f.film_description, f.film_releasedate, f.film_duration, " +
+        final String sql =
+                "SELECT distinct f.film_id, f.film_name, f.film_description, f.film_releasedate, f.film_duration, " +
                 "f.mpa_id, mr.mpa_name, f.rate " +
                 "FROM films f " +
                 "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
