@@ -39,7 +39,7 @@ public class FilmService {
     public Film create(Film film) {
         Film savedFilm = filmDao.save(film);
         genreDao.setGenre(savedFilm);
-        directorDao.setDirector(savedFilm);
+        directorDao.setDirector(film);
         return savedFilm;
     }
 

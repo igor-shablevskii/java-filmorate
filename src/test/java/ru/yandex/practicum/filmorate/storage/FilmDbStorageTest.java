@@ -236,6 +236,87 @@ public class FilmDbStorageTest {
                 .contains(film15).doesNotContain(film13);
     }
 
+    @Order(6)
+    @Test
+    public void getSortedDirectorsFilmsTest() {
+
+        User user12 = new User(12L, "Name12", "loginUser12", "emailUser12@mail.ru",
+                LocalDate.of(1996, 1, 28));
+        userService.save(user12);
+        User user13 = new User(13L, "Name13", "loginUser13", "emailUser13@mail.ru",
+                LocalDate.of(1997, 9, 7));
+        userService.save(user13);
+
+        Director director1 = new Director(1L, "Peter Jackson");
+        directorService.create(director1);
+        Director director2 = new Director(2L, "Lana Wachowski");
+        directorService.create(director2);
+        Director director3 = new Director(3L, "Lilly Wachowski");
+        directorService.create(director3);
+
+        assertThat(directorService.getAllDirectors()).containsOnly(director1, director2, director3);
+
+        Film film16 = new Film(16L, "Название фильма16", "Описание фильма16",
+                LocalDate.of(2001, 11, 21), 119,
+                new LinkedHashSet<>(Set.of(new Genre(6, "Боевик"))),
+                new HashSet<>(Set.of(director1)), new Mpa(1, "G"),
+                0.0F);
+        filmService.create(film16);
+        Film film17 = new Film(17L, "Название фильма17", "Описание фильма17",
+                LocalDate.of(2002, 11, 21), 119,
+                new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"))),
+                new HashSet<>(Set.of(director1)), new Mpa(1, "G"),
+                0.0F);
+        filmService.create(film17);
+        Film film18 = new Film(18L, "Название фильма18", "Описание фильма18",
+                LocalDate.of(2003, 11, 21), 119,
+                new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"), new Genre(6, "Боевик"))),
+                new HashSet<>(Set.of(director1)), new Mpa(1, "G"),
+                0.0F);
+        filmService.create(film18);
+        Film film19 = new Film(19L, "Название фильма19", "Описание фильма19",
+                LocalDate.of(1999, 11, 21), 119,
+                new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"), new Genre(6, "Боевик"))),
+                new HashSet<>(Set.of(director2, director3)), new Mpa(1, "G"), 0.0F);
+        filmService.create(film19);
+
+        filmService.saveMark(film16.getId(), user12.getId(), (byte) 8);
+        filmService.saveMark(film16.getId(), user13.getId(), (byte) 8);
+        filmService.saveMark(film17.getId(), user12.getId(), (byte) 7);
+        filmService.saveMark(film17.getId(), user13.getId(), (byte) 7);
+        filmService.saveMark(film18.getId(), user12.getId(), (byte) 9);
+        filmService.saveMark(film18.getId(), user13.getId(), (byte) 9);
+        filmService.saveMark(film19.getId(), user12.getId(), (byte) 10);
+        filmService.saveMark(film19.getId(), user13.getId(), (byte) 10);
+
+        assertThat(filmService.getSortedDirectorsFilms(1L, FilmSortBy.YEAR))
+                .contains(film16).contains(film17).contains(film18).doesNotContain(film19);
+
+        assertThat(filmService.getSortedDirectorsFilms(1L, FilmSortBy.MARKS))
+                .contains(film18).contains(film16).contains(film17).doesNotContain(film19);
+
+        assertThat(filmService.getSortedDirectorsFilms(1L, FilmSortBy.LIKES))
+                .contains(film18).contains(film16).contains(film17).doesNotContain(film19);
+
+        assertThat(filmService.getSortedDirectorsFilms(2L, FilmSortBy.YEAR))
+                .contains(film19).doesNotContain(film16).doesNotContain(film17).doesNotContain(film18);
+
+        assertThat(filmService.getSortedDirectorsFilms(2L, FilmSortBy.MARKS))
+                .contains(film19).doesNotContain(film16).doesNotContain(film17).doesNotContain(film18);
+
+        assertThat(filmService.getSortedDirectorsFilms(2L, FilmSortBy.LIKES))
+                .contains(film19).doesNotContain(film16).doesNotContain(film17).doesNotContain(film18);
+
+        assertThat(filmService.getSortedDirectorsFilms(3L, FilmSortBy.YEAR))
+                .contains(film19).doesNotContain(film16).doesNotContain(film17).doesNotContain(film18);
+
+        assertThat(filmService.getSortedDirectorsFilms(3L, FilmSortBy.MARKS))
+                .contains(film19).doesNotContain(film16).doesNotContain(film17).doesNotContain(film18);
+
+        assertThat(filmService.getSortedDirectorsFilms(3L, FilmSortBy.LIKES))
+                .contains(film19).doesNotContain(film16).doesNotContain(film17).doesNotContain(film18);
+    }
+
     @Order(7)
     @Test
     public void searchFilmsTest() {
@@ -282,5 +363,4 @@ public class FilmDbStorageTest {
         assertThat("Название фильма21").isEqualTo(resultByTitleAndDirector.get(0).getName());
         assertThat("Малина22").isEqualTo(resultByTitleAndDirector.get(1).getName());
     }
-    
 }

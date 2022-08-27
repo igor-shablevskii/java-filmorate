@@ -99,7 +99,7 @@ public class FilmDbStorage implements FilmDao {
                 "LEFT JOIN film_marks fl ON f.film_id = fl.film_id " +
                 "LEFT JOIN film_director fd ON f.film_id = fd.film_id " +
                 "WHERE fd.director_id = ? AND fl.mark > 5 " +
-                "ORDER BY f.rate";
+                "ORDER BY f.rate DESC";
         return jdbcTemplate.query(sql, this::mapRowToFilm, directorId);
     }
 
