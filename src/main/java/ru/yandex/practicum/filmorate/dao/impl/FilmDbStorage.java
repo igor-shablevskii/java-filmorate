@@ -192,10 +192,10 @@ public class FilmDbStorage implements FilmDao {
                 "FROM films f " +
                 "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.mpa_id " +
                 "WHERE f.film_id IN " +
-                "(SELECT film_id FROM (SELECT film_id FROM " +
-                "film_marks WHERE user_id = ? AND mark > 5 " +
-                "INTERSECT SELECT film_id FROM film_marks " +
-                "WHERE user_id = ? AND mark > 5)) "+
+                "(SELECT f1.film_id FROM film_marks f1 " +
+                "INNER JOIN film_marks f2 ON f1.film_id = f2.film_id " +
+                "WHERE f1.user_id = ? AND f1.mark > 5 " +
+                "AND f2.user_id = ? AND f2.mark > 5) "+
                 "ORDER BY rate";
 
         return jdbcTemplate.query(sql, this::mapRowToFilm, userId, otherUserId);
